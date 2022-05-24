@@ -20,8 +20,3 @@ public export
 Uninhabited (Lookup {a} {b} x []) where
   uninhabited (Here _) impossible
   uninhabited (There p) impossible
-
-export
-Uninhabited (Lookup {a} {b} x xys) => Uninhabited (x = x') => Uninhabited (Lookup {a} {b} x $ (x', y')::xys) where
-  uninhabited lk@(Here y') @{_} @{uninhab_eq} = absurd (the (x = x') Refl)
-  uninhabited (There p) = uninhabited p
