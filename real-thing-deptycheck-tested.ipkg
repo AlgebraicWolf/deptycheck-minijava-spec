@@ -1,0 +1,12 @@
+package real-thing-deptycheck-tested
+
+authors = "Aleksei Volkov"
+version = 0.0.1
+
+depends = contrib, deptycheck
+
+sourcedir = "src"
+
+main = Run
+
+executable = real-thing-deptycheck-tested
