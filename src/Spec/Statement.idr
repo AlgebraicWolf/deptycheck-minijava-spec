@@ -1,7 +1,5 @@
 module Spec.Statement
 
-import Data.List.Lookup
-
 import public Spec.Expression
 
 -- This is based on MiniJava grammar

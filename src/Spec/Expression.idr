@@ -1,7 +1,5 @@
 module Spec.Expression
 
-import Data.List.Lookup
-
 import public Spec.Aspects.Variables
 
 -- For now, this is based on the MiniJava grammar
