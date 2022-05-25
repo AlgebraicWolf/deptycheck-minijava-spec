@@ -13,12 +13,12 @@ public export
 data Program : Type where
   MkProgram : MainClass -> Program
 
-export
-Show MainClass where
-  show (MkMain n main) = "class " ++ show n ++ " {\npublic static void main(String[] args) {\n" ++ show main ++"}\n}\n"
+-- export
+-- Show MainClass where
+--   show (MkMain n main) = "class " ++ show n ++ " {\npublic static void main(String[] args) {\n" ++ show main ++"}\n}\n"
 
-export
-Show Program where
-  show (MkProgram x) = show x
+-- export
+-- Show Program where
+--   show (MkProgram x) = show x
 
 

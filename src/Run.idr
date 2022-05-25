@@ -1,8 +1,8 @@
 module Run
 
-import Data.List.Lookup
 import Test.DepTyCheck.Gen
 import Spec.Class
+import Gens
 
 -- create_variable : Statement [] ?
 -- create_variable = VarDeclaration JInt "x"

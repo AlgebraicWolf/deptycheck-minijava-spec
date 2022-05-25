@@ -1,21 +1,21 @@
 module Spec.Expression
 
-import Data.List.Lookup
+import Data.Fin
 
 import public Spec.Aspects.Variables
 
 -- For now, this is based on the MiniJava grammar
 public export
-data Expression : (vars : Variables) -> (result : JType) -> Type where
-  BoolTrue : Expression vars JBool
-  BoolFalse : Expression vars JBool
-  IntegerLiteral : Int -> Expression vars JInt
-  FromIdentifier : (n : Identifier) -> (0 lk : Lookup n vars) => Expression vars lk.reveal
+data Expression : (n : Nat) -> (vars : Variables n) -> (result : JType) -> Type where
+  BoolTrue : Expression n vars JBool
+  BoolFalse : Expression n vars JBool
+  IntegerLiteral : Int -> Expression n vars JInt
+  FromIdentifier : (k : Fin n) -> IsOfType n k jty vars => Expression n vars jty
 
 export
-Show (Expression vars res) where
+Show (Expression n vars res) where
   show BoolTrue = "true"
   show BoolFalse = "false"
   show (IntegerLiteral x) = show x
-  show (FromIdentifier n) = show n
+  show (FromIdentifier k) = "x" ++ show (finToNat k)
 
