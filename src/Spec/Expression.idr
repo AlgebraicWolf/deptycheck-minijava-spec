@@ -1,7 +1,6 @@
 module Spec.Expression
 
 import Data.Fin
-
 import public Spec.Aspects.Variables
 
 -- For now, this is based on the MiniJava grammar

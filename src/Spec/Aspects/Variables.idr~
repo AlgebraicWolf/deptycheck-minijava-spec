@@ -32,14 +32,8 @@ data Variables : Nat -> Type where
 
 %name Variables vars
 
-public export
-data IsOfType : (n : Nat) -> (k : Fin n) -> (jty : JType) -> (vars : Variables n) -> Type where
-  Here : IsOfType (S n) FZ jty (jty::vars)
-  There : IsOfType n k jty vars -> IsOfType (S n) (FS k) jty (jty'::vars)
-
-public export
 getType : Fin n -> Variables n -> JType
 getType FZ (x :: vars) = x
-getType (FS n) (y :: vars) = getType n vars
+getType (FS n) (y :: vars) = ?getType_rhs_3
 
 
