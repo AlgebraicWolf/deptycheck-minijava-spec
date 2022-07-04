@@ -9,10 +9,10 @@ import public Spec.Expression
 -- generated programs by allowing the mixing of
 -- 'usual' statements and variable declarations
 public export
-data Statement : {n, m : Nat} -> (preV : Variables n) -> (postV : Variables m) -> Type where
-  VarDeclaration : (type : JType) -> Statement vars (type::vars)
-  Assignment : (k : Fin n)  => Expression n vars (getType k vars) -> Statement vars vars
-  Compose : Statement pre mid -> Statement mid post -> Statement pre post
+data Statement : (n, m : Nat) -> (preV : Variables n) -> (postV : Variables m) -> Type where
+  VarDeclaration : (type : JType) -> Statement n (S n) vars (type::vars)
+  Assignment : (k : Fin n)  => Expression n vars (getType k vars) -> Statement n n vars vars
+  Compose : Statement n m pre mid -> Statement m k mid post -> Statement n k pre post
 
 -- export
 -- Show (Statement {n} {m} preV postV) where
