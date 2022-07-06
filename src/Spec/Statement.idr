@@ -10,9 +10,13 @@ import public Spec.Expression
 -- 'usual' statements and variable declarations
 public export
 data Statement : (n, m : Nat) -> (preV : Variables n) -> (postV : Variables m) -> Type where
-  VarDeclaration : (type : JType) -> Statement n (S n) vars (type::vars)
-  Assignment : (k : Fin n)  => Expression n vars (getType k vars) -> Statement n n vars vars
-  Compose : Statement n m pre mid -> Statement m k mid post -> Statement n k pre post
+  VarDeclaration : (type : JType) -> Statement n m preV postV -> Statement n (S m) preV (type::postV)
+  Assignment : (k : Fin m)  => Expression m postV (getType k postV) -> Statement n m preV postV -> Statement n m preV postV
+  Empty : Statement 0 0 [] []
+-- This is bad due to a large number of symmetries
+--  Compose : Statement n m pre mid -> Statement m k mid post -> Statement n k pre post
+-- Thus, I've decided to move to a list-like structure to avoid having many different terms
+-- encoding essentially the same program
 
 -- export
 -- Show (Statement {n} {m} preV postV) where
