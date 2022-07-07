@@ -1,6 +1,5 @@
 module Spec.Aspects.Variables
 
-import Decidable.Equality.Core
 import Data.Fin
 
 import public Spec.Aspects.Types
@@ -60,10 +59,4 @@ public export
 typeMatchProof : (k : Fin n) -> (vars : Variables n) -> (jty : JType) -> (getType k vars == jty = True) -> IsOfType n k jty vars
 typeMatchProof k vars jty prf = let varTy = getType k vars in
                                     eqToProof k vars jty (boolEqToEq _ _ prf)
-
-DecEq JType where
-  decEq JBool JBool = Yes Refl
-  decEq JBool JInt = ?wut_3
-  decEq JInt JInt = ?wut_1
-  decEq JInt JBool = ?wut_0
 
