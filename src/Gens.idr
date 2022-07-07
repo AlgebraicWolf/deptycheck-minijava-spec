@@ -49,5 +49,9 @@ genStatement (More x) = let prev = genStatement x in do
                           (n ** vars ** stmt) <- prev
                           pure (_ ** _ ** VarDeclaration JBool stmt)
 
+genMainClass : Fuel -> Gen $ MainClass
+genMainClass fuel = (\(_ ** _ ** stmt) => MkMain "MainClass" stmt) <$> genStatement fuel
 
+genProgram : Fuel -> Gen $ Program
+genProgram fuel = MkProgram <$> genMainClass fuel
 
