@@ -50,18 +50,6 @@ eqToProof FZ (x :: vars) jty prf = rewrite prf in Here
 eqToProof (FS y) (x :: vars) jty prf = There $ eqToProof y vars jty prf
 
 public export
-boolEqToEq : (a : JType) -> (b : JType) -> (a == b = True) -> a = b
-boolEqToEq JBool JBool prf = Refl
-boolEqToEq JBool JInt prf = absurd prf
-boolEqToEq JInt JBool prf = absurd prf
-boolEqToEq JInt JInt prf = Refl
-
-public export
-typeMatchProof : (k : Fin n) -> (vars : Variables n) -> (jty : JType) -> (getType k vars == jty = True) -> IsOfType n k jty vars
-typeMatchProof k vars jty prf = let varTy = getType k vars in
-                                    eqToProof k vars jty (boolEqToEq _ _ prf)
-
-public export
 DecEq JType where
   decEq JBool JBool = Yes Refl
   decEq JBool JInt = No (\prf => case prf of Refl impossible)
