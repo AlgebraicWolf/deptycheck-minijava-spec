@@ -64,7 +64,8 @@ typeMatchProof k vars jty prf = let varTy = getType k vars in
 public export
 DecEq JType where
   decEq JBool JBool = Yes Refl
-  decEq JBool JInt = No notJBoolEqJInt
+  decEq JBool JInt = No (\prf => case prf of Refl impossible)
+
   decEq JInt JInt = Yes Refl
-  decEq JInt JBool = No (\prf => notJBoolEqJInt (sym prf))
+  decEq JInt JBool = No (\prf => case prf of Refl impossible)
 

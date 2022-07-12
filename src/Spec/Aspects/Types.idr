@@ -14,10 +14,6 @@ Show JType where
   show JInt = "int"
 
 public export
-notJBoolEqJInt : JBool = JInt -> Void
-notJBoolEqJInt prf impossible
-
-public export
 Eq JType where
   JBool == JBool = True
   JInt == JInt = True
