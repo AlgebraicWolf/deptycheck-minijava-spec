@@ -53,7 +53,9 @@ genStatement (More x) = let prev = genStatement x in
                           (n ** vars ** stmt) <- prev
                           case vars of
                                [] => empty
-                               (y :: vars1) => (genExpression x n vars y) >>= (\expr => pure (_ ** _ ** Assignment 0 expr stmt))
+                               (y :: vars1) => (genExpression x n vars y) >>= (\expr => case choose (isValidExpr expr stmt) of
+                                                                                             Left prf => pure (_ ** _ ** Assignment 0 expr stmt prf)
+                                                                                             Right prf => empty)
                           in
                           var_decl <|> assignment
 

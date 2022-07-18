@@ -4,23 +4,27 @@ import Data.Fin
 
 import public Spec.Expression
 
+
 -- This is based on MiniJava grammar
 -- However, I've decided to add flexibility to the
 -- generated programs by allowing the mixing of
 -- 'usual' statements and variable declarations
-public export
-data Statement : (n : Nat) -> (postV : Variables n) -> Type where
-  VarDeclaration : (type : JType) -> Statement n postV -> Statement (S n) (type::postV)
-  Assignment : (k : Fin n)  -> Expression n postV (getType k postV) -> Statement n postV -> Statement n postV
-  Empty : Statement 0 []
--- This is bad due to a large number of symmetries
---  Compose : Statement n m pre mid -> Statement m k mid post -> Statement n k pre post
--- Thus, I've decided to move to a list-like structure to avoid having many different terms
--- encoding essentially the same program
+mutual
+  public export
+  data Statement : (n : Nat) -> (postV : Variables n) -> Type where
+    VarDeclaration : (type : JType) -> Statement n postV -> Statement (S n) (type::postV)
+    Assignment : (k : Fin n)  -> (expr : Expression n postV (getType k postV)) -> (stmt : Statement n postV) -> So (isValidExpr expr stmt) -> Statement n postV
+    Empty : Statement 0 []
 
--- export
--- Show (Statement {n} {m} preV postV) where
---   show (VarDeclaration type) = show type ++ " x" ++ show m ++ ";\n"
---   show (Assignment n x) = show n ++ " = " ++ show x ++ ";\n"
---   show (Compose x y) = show x ++ show y
+  public export
+  isInitialized : {n : Nat} -> {vars : Variables n} -> (k : Fin n) -> Statement n vars -> Bool
+  isInitialized FZ (VarDeclaration type stmt) = False
+  isInitialized (FS y) (VarDeclaration type stmt) = isInitialized y stmt
+  isInitialized k (Assignment x expr stmt prf) = if k == x then True else isInitialized k stmt
+  isInitialized k Empty impossible
+
+  public export
+  isValidExpr : {n : Nat} -> {vars : Variables n} -> {res : JType} -> Expression n vars res -> Statement n vars -> Bool
+  isValidExpr (FromIdentifier k) stmt = isInitialized k stmt
+  isValidExpr _ _ = True -- Very very dangerous, don't forget to edit
 

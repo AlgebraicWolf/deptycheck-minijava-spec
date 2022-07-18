@@ -15,11 +15,11 @@ import System.File.Virtual
 -- create_variable : Statement [] ?
 -- create_variable = VarDeclaration JInt "x"
 
-assign_main : Statement ? ?
-assign_main = Assignment 1 BoolTrue (Assignment 0 (IntegerLiteral 5) (VarDeclaration JInt (VarDeclaration JBool Empty)))
+-- assign_main : Statement ? ?
+-- assign_main = Assignment 1 BoolTrue (Assignment 0 (IntegerLiteral 5) (VarDeclaration JInt (VarDeclaration JBool Empty)))
 
-test : Program
-test = MkProgram $ MkMain "Main" assign_main
+-- test : Program
+-- test = MkProgram $ MkMain "Main" assign_main
 
 lazy_for : Monad m => LazyList a -> (a -> m Unit) -> m Unit
 lazy_for xs f = foldrLazy ((>>) . f) (pure ()) xs
@@ -40,4 +40,4 @@ printOnce n gen = lazy_for (iterateN n S Z) $ \v => do
 main : IO Unit
 main = do
   putStrLn "Program generation"
-  printOnce 5 $ genProgram $ limit 2
+  printOnce 5 $ genProgram $ limit 10

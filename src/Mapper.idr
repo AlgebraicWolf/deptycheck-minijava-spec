@@ -18,7 +18,7 @@ stmtToCode : {n : Nat} -> {vars : Variables n} -> Statement n vars -> String
 stmtToCode = (foldr ((++) . (++ "\n")) "") . reverse . stmtToCode' where
   stmtToCode' : {n : Nat} -> {vars : Variables n} -> Statement n vars -> List String
   stmtToCode' {n = S k} (VarDeclaration type stmt) = (typeToCode type ++ " x" ++ show k ++ ";") ::(stmtToCode' stmt)
-  stmtToCode' (Assignment k expr stmt) = ("x" ++ show (complement k) ++ " = " ++ exprToCode expr ++ ";")::(stmtToCode' stmt)
+  stmtToCode' (Assignment k expr stmt _) = ("x" ++ show (complement k) ++ " = " ++ exprToCode expr ++ ";")::(stmtToCode' stmt)
   stmtToCode' Empty = []
 
 mainClassToCode : MainClass -> String
