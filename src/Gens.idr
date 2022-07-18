@@ -26,7 +26,7 @@ genInt _ = elements [-100..100]
 -- We can generate either a literal or a read from a variable
 
 genExpressionVars : Fuel -> (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
-genExpressionVars _ 0 [] type = uniform []
+genExpressionVars _ 0 [] type = empty
 genExpressionVars _ (S n) (x::_) type = uniform $ do
                                                     k <- (fromList $ forget $ allFins n)
                                                     case decEq (getType k (x::_)) type of
@@ -44,14 +44,23 @@ genExpression fuel n vars res = genExpressionLiteral @{genInt} fuel n vars res <
 -- genStatement : Fuel -> (Fuel -> Gen Int) => Gen $ (n : Nat ** postV : Variables n ** Statement n postV)
 -- genStatement = deriveGen @{MainCoreDerivator @{LeastEffort}}
 genStatement : Fuel -> Gen $ (n : Nat ** postV : Variables n ** Statement n postV)
-genStatement Dry = do pure (0 ** [] ** Empty)
-genStatement (More x) = let prev = genStatement x in do
+genStatement Dry = pure (_ ** _ ** Empty)
+genStatement (More x) = let prev = genStatement x in
+                        let var_decl = do
                           (n ** vars ** stmt) <- prev
-                          pure (_ ** _ ** VarDeclaration JBool stmt)
+                          pure (_ ** _ ** VarDeclaration JBool stmt) in
+                        let assignment = do
+                          (n ** vars ** stmt) <- prev
+                          case vars of
+                               [] => empty
+                               (y :: vars1) => (genExpression x n vars y) >>= (\expr => pure (_ ** _ ** Assignment 0 expr stmt))
+                          in
+                          var_decl <|> assignment
 
 genMainClass : Fuel -> Gen $ MainClass
 genMainClass fuel = (\(_ ** _ ** stmt) => MkMain "MainClass" stmt) <$> genStatement fuel
 
+export
 genProgram : Fuel -> Gen $ Program
 genProgram fuel = MkProgram <$> genMainClass fuel
 
