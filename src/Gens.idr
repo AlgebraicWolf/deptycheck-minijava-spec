@@ -28,7 +28,7 @@ genInt _ = elements [-100..100]
 genExpressionVars : Fuel -> (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
 genExpressionVars _ 0 [] type = empty
 genExpressionVars _ (S n) (x::_) type = uniform $ do
-                                                    k <- (fromList $ forget $ allFins n)
+                                                    k <- fromList $ forget $ allFins n
                                                     case decEq (getType k (x::_)) type of
                                                       (Yes prf) => pure $ FromIdentifier @{eqToProof k (x::_) type prf} k
                                                       (No contra) => []
@@ -51,11 +51,13 @@ genStatement (More x) = let prev = genStatement x in
                           pure (_ ** _ ** VarDeclaration JBool stmt) in
                         let assignment = do
                           (n ** vars ** stmt) <- prev
-                          case vars of
-                               [] => empty
-                               (y :: vars1) => (genExpression x n vars y) >>= (\expr => case choose (isValidExpr expr stmt) of
-                                                                                             Left prf => pure (_ ** _ ** Assignment 0 expr stmt prf)
-                                                                                             Right prf => empty)
+                          case n of
+                            Z => empty
+                            (S m) => oneOf $ do
+                                      k <- (forget $ allFins m)
+                                      pure $ genExpression x n vars (getType k vars) >>= (\expr => case choose (isValidExpr expr stmt) of
+                                                                                                 Left prf => pure (_ ** _ ** Assignment k expr stmt prf)
+                                                                                                 Right _ => empty)
                           in
                           var_decl <|> assignment
 
