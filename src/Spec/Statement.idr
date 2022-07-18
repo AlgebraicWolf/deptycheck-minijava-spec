@@ -11,7 +11,7 @@ import public Spec.Expression
 public export
 data Statement : (n : Nat) -> (postV : Variables n) -> Type where
   VarDeclaration : (type : JType) -> Statement n postV -> Statement (S n) (type::postV)
-  Assignment : (k : Fin n)  => Expression n postV (getType k postV) -> Statement n postV -> Statement n postV
+  Assignment : (k : Fin n)  -> Expression n postV (getType k postV) -> Statement n postV -> Statement n postV
   Empty : Statement 0 []
 -- This is bad due to a large number of symmetries
 --  Compose : Statement n m pre mid -> Statement m k mid post -> Statement n k pre post
