@@ -15,8 +15,8 @@ import public Spec.Class
 genJType : Fuel -> Gen JType
 genJType = deriveGen @{MainCoreDerivator @{LeastEffort}}
 
-genInt : Fuel -> Gen Int
-genInt _ = elements [-100..100]
+genInt : Gen Int
+genInt = elements [-100..100]
 
 -- Generate expression of desired signature
 -- genExpression : Fuel -> (Fuel -> Gen Int) => (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
@@ -25,20 +25,20 @@ genInt _ = elements [-100..100]
 -- Generator of expressions with desired signature
 -- We can generate either a literal or a read from a variable
 
-genExpressionVars : Fuel -> (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
-genExpressionVars _ 0 [] type = empty
-genExpressionVars _ (S n) (x::_) type = uniform $ do
-                                                    k <- fromList $ forget $ allFins n
+genExpressionVars : (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
+genExpressionVars 0 [] type = empty
+genExpressionVars (S n) (x::_) type = elements $ do
+                                                    k <- forget $ allFins n
                                                     case decEq (getType k (x::_)) type of
                                                       (Yes prf) => pure $ FromIdentifier @{eqToProof k (x::_) type prf} k
                                                       (No contra) => []
 
-genExpressionLiteral : Fuel -> (Fuel -> Gen Int) => (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
-genExpressionLiteral fuel n vars JBool = uniform [BoolTrue, BoolFalse]
-genExpressionLiteral @{genInt} fuel n vars JInt = (\x => IntegerLiteral x) <$> genInt fuel
+genExpressionLiteral : Gen Int => (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
+genExpressionLiteral n vars JBool = elements [BoolTrue, BoolFalse]
+genExpressionLiteral @{genInt} n vars JInt = (\x => IntegerLiteral x) <$> genInt
 
-genExpression : Fuel -> (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
-genExpression fuel n vars res = genExpressionLiteral @{genInt} fuel n vars res <|> genExpressionVars fuel n vars res
+genExpression : (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
+genExpression n vars res = genExpressionLiteral @{genInt} n vars res <|> genExpressionVars n vars res
 
 -- Generator of statements with desired starting point and free endpoint
 -- genStatement : Fuel -> (Fuel -> Gen Int) => Gen $ (n : Nat ** postV : Variables n ** Statement n postV)
@@ -55,7 +55,7 @@ genStatement (More x) = let prev = genStatement x in
                             Z => empty
                             (S m) => oneOf $ do
                                       k <- (forget $ allFins m)
-                                      pure $ genExpression x n vars (getType k vars) >>= (\expr => case choose (isValidExpr expr stmt) of
+                                      pure $ genExpression n vars (getType k vars) >>= (\expr => case choose (isValidExpr expr stmt) of
                                                                                                  Left prf => pure (_ ** _ ** Assignment k expr stmt prf)
                                                                                                  Right _ => empty)
                           in
