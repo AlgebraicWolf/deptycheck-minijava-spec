@@ -48,7 +48,7 @@ genStatement Dry = pure (_ ** _ ** Empty)
 genStatement (More x) = let prev = genStatement x in
                         let var_decl = do
                           (n ** vars ** stmt) <- prev
-                          pure (_ ** _ ** VarDeclaration JBool stmt) in
+                          elements [(_ ** _ ** VarDeclaration JBool stmt), (_ ** _ ** VarDeclaration JInt stmt)] in
                         let assignment = do
                           (n ** vars ** stmt) <- prev
                           case n of

@@ -40,4 +40,4 @@ printOnce n gen = lazy_for (iterateN n S Z) $ \v => do
 main : IO Unit
 main = do
   putStrLn "Program generation"
-  printOnce 5 $ genProgram $ limit 10
+  printOnce 30 $ genProgram $ limit 5
