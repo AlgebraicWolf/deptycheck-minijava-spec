@@ -12,11 +12,15 @@ import public Spec.Class
 %default total
 %language ElabReflection
 
-genJType : Fuel -> Gen JType
-genJType = deriveGen @{MainCoreDerivator @{LeastEffort}}
+%hint
+UsedConstructorDerivator : ConstructorDerivator
+UsedConstructorDerivator = LeastEffort
 
-genInt : Gen Int
-genInt = elements [-100..100]
+genJType : Fuel -> Gen JType
+genJType = deriveGen
+
+genInt : Fuel -> Gen Int
+genInt _ = elements [-100..100]
 
 -- Generate expression of desired signature
 -- genExpression : Fuel -> (Fuel -> Gen Int) => (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
@@ -37,15 +41,20 @@ genExpressionLiteral : Gen Int => (n : Nat) -> (vars : Variables n) -> (res : JT
 genExpressionLiteral n vars JBool = elements [BoolTrue, BoolFalse]
 genExpressionLiteral @{genInt} n vars JInt = (\x => IntegerLiteral x) <$> genInt
 
-genExpression : (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
-genExpression n vars res = genExpressionLiteral @{genInt} n vars res <|> genExpressionVars n vars res
+genExpression : Fuel -> (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
+genExpression f n vars res = genExpressionLiteral @{genInt f} n vars res <|> genExpressionVars n vars res
 
--- Generator of statements with desired starting point and free endpoint
--- genStatement : Fuel -> (Fuel -> Gen Int) => Gen $ (n : Nat ** postV : Variables n ** Statement n postV)
--- genStatement = deriveGen @{MainCoreDerivator @{LeastEffort}}
+-- genExpression : Fuel -> (Fuel -> Gen Int) => (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res
+-- genExpression = deriveGen
+
+-- genStatement : Fuel
+--             -> (Fuel -> Gen Int)
+--             => (Fuel -> (n : Nat) -> (vars : Variables n) -> (res : JType) -> Gen $ Expression n vars res)
+--             => Gen $ (n : Nat ** postV : Variables n ** Statement n postV)
+-- genStatement = deriveGen
 genStatement : Fuel -> Gen $ (n : Nat ** postV : Variables n ** Statement n postV)
 genStatement Dry = pure (_ ** _ ** Empty)
-genStatement (More x) = let prev = genStatement x in
+genStatement f@(More x) = let prev = genStatement x in
                         let var_decl = do
                           (n ** vars ** stmt) <- prev
                           elements [(_ ** _ ** VarDeclaration JBool stmt), (_ ** _ ** VarDeclaration JInt stmt)] in
@@ -55,11 +64,11 @@ genStatement (More x) = let prev = genStatement x in
                             Z => empty
                             (S m) => oneOf $ do
                                       k <- (forget $ allFins m)
-                                      pure $ genExpression n vars (getType k vars) >>= (\expr => case choose (isValidExpr expr stmt) of
+                                      pure $ genExpression f n vars (getType k vars) >>= (\expr => case choose (isValidExpr expr stmt) of
                                                                                                  Left prf => pure (_ ** _ ** Assignment k expr stmt prf)
                                                                                                  Right _ => empty)
                           in
-                          var_decl <|> assignment
+                          assignment <|> var_decl
 
 genMainClass : Fuel -> Gen $ MainClass
 genMainClass fuel = (\(_ ** _ ** stmt) => MkMain "MainClass" stmt) <$> genStatement fuel
