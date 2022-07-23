@@ -3,6 +3,7 @@ module Run
 import Data.Fin
 import Data.Fuel
 import Data.String
+import Data.List
 import Data.List.Lazy
 import Data.Maybe
 import Data.Either
@@ -33,6 +34,9 @@ prependMaybe Nothing xs = xs
 prependMaybe (Just x) xs = x::xs
 
 data GenericError = MkGenericError String
+
+Show GenericError where
+  show (MkGenericError msg) = msg
 
 -- Enum of possible command-line options
 data CLParam =
@@ -79,6 +83,30 @@ options = [ MkOpt ["--help", "-h"] Nothing Help (Just "Show list of available op
             MkOpt ["--skip", "-s"] (Just $ RequiredNat "n") (\n => NSkip n) (Just "Number of generated tests to skip before saving one"),
             MkOpt ["--fuel", "-f"] (Just $ RequiredNat "n") (\n => NFuel n) (Just "Amount of fuel to run generator") ]
 
+optShow : OptDesc -> (String, Maybe String)
+optShow (MkOpt [] _ _ _) = ("", Just "")
+optShow (MkOpt flags arg action help) = (showSep ", " flags ++ " " ++ showMaybe (show <$> arg), help)  where
+  showSep : String -> List String -> String
+  showSep sep [] = ""
+  showSep sep [x] = x
+  showSep sep (x :: xs) = x ++ sep ++ showSep sep xs
+
+  showMaybe : Maybe String -> String
+  showMaybe Nothing = ""
+  showMaybe (Just x) = x
+
+fstWidth : List (String, a) -> Nat
+fstWidth rows = foldr max 0 $ map (length . fst) rows
+
+textFromOptions : List OptDesc -> String
+textFromOptions opts = let rows = optShow <$> opts in
+                       let width = fstWidth rows in
+                           concatMap (showRow width) rows where
+  showRow : Nat -> (String, Maybe String) -> String
+  showRow maxWidth (optshow, help) = maybe ""
+                                          (\h => "  " ++ optshow ++ pack (replicate (minus (maxWidth + 2) (length optshow)) ' ') ++ h ++ "\n")
+                                          help
+
 -- Tags for parameters
 data OutDir : Type where
 data NumTests : Type where
@@ -86,12 +114,22 @@ data Stride : Type where
 data NumFuel : Type where
 data HelpOnly : Type where
 
-VarList : List (List Error -> Type)
-VarList = [ State OutDir $ Maybe String
-          , State NumTests Nat
-          , State Stride Nat
-          , State NumFuel Fuel
-          , State HelpOnly Bool ]
+data AppConfig : Type where
+
+record Config where
+  constructor MkConfig
+  outDir : Maybe String
+  numTests : Nat
+  stride : Nat
+  numFuel : Fuel
+  helpOnly : Bool
+
+defaultConfig : Config
+defaultConfig = MkConfig Nothing
+                         30
+                         1
+                         (limit 4)
+                         False
 
 processArgs : String -> (args : Maybe OptType) -> List String -> ActType args -> Either String (Maybe (CLParam, List String))
 processArgs flag Nothing xs f = Right $ Just (f, xs)
@@ -141,40 +179,56 @@ printOnce n gen = lazy_for (iterateN n S Z) $ \v => do
     print : String -> IO Unit
     print str = putStrLn str >> fflush stdout
 
-processArg : Has VarList es => CLParam -> App es ()
-processArg Help = put HelpOnly True
-processArg (OutputDir str) = put OutDir $ Just str
-processArg (NTests k) = put NumTests k
-processArg (NSkip k) = put Stride k
-processArg (NFuel k) = put NumFuel $ limit k
+processArg : State AppConfig Config es => CLParam -> App es ()
+processArg Help = do conf <- get AppConfig
+                     put AppConfig ({ helpOnly := True } conf)
+processArg (OutputDir str) = do conf <- get AppConfig
+                                put AppConfig ({ outDir := Just str} conf)
+processArg (NTests k) = do conf <- get AppConfig
+                           put AppConfig ({ numTests := k} conf)
+processArg (NSkip k) = do conf <- get AppConfig
+                          put AppConfig ({ stride := k} conf)
+processArg (NFuel k) = do conf <- get AppConfig
+                          put AppConfig ({ numFuel := limit k} conf)
 
 showHelp : Console es => App es ()
-showHelp = ?showHelp_rhs
+showHelp = putStr $ textFromOptions options
 
-generateTests : Has [Console, FileIO] es => Has VarList es => String -> App es ()
+generateTests : Has [State AppConfig Config, Console, FileIO] es => String -> App es ()
 generateTests path = ?generateTests_rhs
 
-main_app : Has [Console, FileIO, Exception GenericError] es => Has VarList es => List String -> App es ()
-main_app args = do
+mainApp : Has [State AppConfig Config, FileIO, Exception GenericError, Console] es => List String -> App es ()
+mainApp args = do
   arglist <- processOpts args
   for_ arglist processArg
-
-  help <- get HelpOnly
-  if help
+  conf <- get AppConfig
+  if conf.helpOnly
     then do
       showHelp
     else do
-      out_dir <- get OutDir
-      n_tests <- get NumTests
-      stride <- get Stride
-      n_fuel <- get NumFuel
-      case out_dir of
+      case conf.outDir of
         Nothing => throw $ MkGenericError "Output directory was not specified"
         (Just path) => generateTests path
   pure ()
 
+mainAppInitVars : Has [FileIO, Exception GenericError, Console] es => List String -> App es ()
+mainAppInitVars args = new defaultConfig $ mainApp args
+
+mainAppNoexcept : Console es => Console (IOError :: es) => PrimIO (GenericError :: IOError :: es) => List String -> App es ()
+mainAppNoexcept args = let mainArgs = mainAppInitVars args in
+                       let h1 = handle mainArgs
+                                       pure
+                                       (\err : GenericError => putStrLn $ "Error: " ++ show err) in
+                       let h2 = handle h1
+                                       pure
+                                       (\err : IOError => putStrLn $ "Error: " ++ show err) in
+                                       h2
+
 main : IO Unit
 main = do
-  args <- getArgs
-  putStrLn "Program generation"
-  printOnce 30 $ genProgram $ limit 5
+  args' <- getArgs
+  case args' of
+    [] => putStrLn "Argument list is empty for some bizzare reason"
+    (_::args) => run $ mainAppNoexcept args
+  -- putStrLn "Program generation"
+  -- printOnce 30 $ genProgram $ limit 5
