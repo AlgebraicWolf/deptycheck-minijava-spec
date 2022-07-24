@@ -28,3 +28,6 @@ export
 programToCode : Program -> String
 programToCode (MkProgram x) = mainClassToCode x
 
+export
+programToOracle : Program -> String
+programToOracle prog = ""

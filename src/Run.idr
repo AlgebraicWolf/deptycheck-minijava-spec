@@ -13,6 +13,7 @@ import Spec.Class
 import Spec.Expression
 import System
 import System.File
+import System.Directory
 import Control.App
 import Control.App.Console
 import Control.App.FileIO
@@ -32,6 +33,16 @@ checkNat n = toMaybe (n >= 0) (integerToNat n)
 prependMaybe : Maybe a -> List a -> List a
 prependMaybe Nothing xs = xs
 prependMaybe (Just x) xs = x::xs
+
+
+toFileEx : FileError -> FileEx
+toFileEx (GenericFileError i) = GenericFileEx i
+toFileEx FileReadError = FileReadError
+toFileEx FileWriteError = FileWriteError
+toFileEx FileNotFound = FileNotFound
+toFileEx PermissionDenied = PermissionDenied
+toFileEx FileExists = FileExists
+
 
 data GenericError = MkGenericError String
 
@@ -53,21 +64,15 @@ data CLParam =
 
 data OptType = RequiredStr String
              | RequiredNat String
-             | OptionalStr String
-             | OptionalNat String
 
 Show OptType where
   show (RequiredStr x) = "<" ++ x ++ ">"
   show (RequiredNat x) = "<" ++ x ++ ">"
-  show (OptionalStr x) = "[" ++ x ++ "]"
-  show (OptionalNat x) = "[" ++ x ++ "]"
 
 ActType : Maybe OptType -> Type
 ActType Nothing = CLParam
 ActType (Just (RequiredStr x)) = String -> CLParam
 ActType (Just (RequiredNat x)) = Nat -> CLParam
-ActType (Just (OptionalStr x)) = Maybe String -> CLParam
-ActType (Just (OptionalNat x)) = Maybe Int -> CLParam
 
 record OptDesc where
   constructor MkOpt
@@ -140,9 +145,6 @@ processArgs flag (Just opt@(RequiredNat x)) (y :: xs) f = do
   arg <- maybeToEither ("Expected Nat argument " ++ show y ++ " for flag " ++ flag) (parseInteger y >>= checkNat)
   pure $ Just (f arg, xs)
 
-processArgs flag (Just opt@(OptionalStr x)) xs f = ?processArgs_rhs_4
-processArgs flag (Just opt@(OptionalNat x)) xs f = ?processArgs_rhs_5
-
 matchFlag : (d : OptDesc) -> List String -> Either String (Maybe (CLParam, List String))
 matchFlag _ [] = Right Nothing
 matchFlag d (x :: xs) = if x `elem` flags d
@@ -194,10 +196,47 @@ processArg (NFuel k) = do conf <- get AppConfig
 showHelp : Console es => App es ()
 showHelp = putStr $ textFromOptions options
 
-generateTests : Has [State AppConfig Config, Console, FileIO] es => String -> App es ()
-generateTests path = ?generateTests_rhs
+writeTest : Has [Console, FileIO] es => String -> Nat -> Nat -> Program -> App es ()
+writeTest dir tot n prog = do
+  let path = dir ++ "/" ++ "test" ++ show n
+  let test_path = path ++ ".java"
+  let oracle_path = path ++ ".json"
+  putStrLn $ "Saving test " ++ show (S n) ++ "/" ++ show tot
+  withFile test_path WriteTruncate
+    throw
+    (\f => fPutStr f $ programToCode prog)
+  withFile oracle_path WriteTruncate
+    throw
+    (\f => fPutStr f $ programToOracle prog)
 
-mainApp : Has [State AppConfig Config, FileIO, Exception GenericError, Console] es => List String -> App es ()
+writeMetadata : Has [FileIO, State AppConfig Config] es => String -> App es ()
+writeMetadata dir = pure ()
+
+
+fileOp : Has [PrimIO, Exception IOError] es => IO (Either FileError a) -> App es a
+fileOp fileRes = do Right res <- primIO fileRes
+                      | Left err => throw $ FileErr $ toFileEx err
+                    pure res
+
+createDir : Has [PrimIO, Exception IOError] es => String -> App es ()
+createDir = fileOp . createDir
+
+removeFile : Has [PrimIO, Exception IOError] es => String -> App es ()
+removeFile = fileOp . removeFile
+
+generateTests : Has [PrimIO, Console, State AppConfig Config, FileIO] es => String -> Gen Program -> App es ()
+generateTests path gen = do
+  conf <- get AppConfig
+  -- TODO Handle case when the directory is already present
+  createDir path
+  writeMetadata path
+  lazy_for (iterateN conf.numTests S Z) $ \v => do
+    let (prog::_) = runOnce (v * conf.stride) gen
+      | [] => putStrLn "Generator is empty"
+    writeTest path conf.numTests v prog
+
+
+mainApp : Has [PrimIO, State AppConfig Config, FileIO, Exception GenericError, Console] es => List String -> App es ()
 mainApp args = do
   arglist <- processOpts args
   for_ arglist processArg
@@ -208,10 +247,10 @@ mainApp args = do
     else do
       case conf.outDir of
         Nothing => throw $ MkGenericError "Output directory was not specified"
-        (Just path) => generateTests path
+        (Just path) => generateTests path $ genProgram $ conf.numFuel
   pure ()
 
-mainAppInitVars : Has [FileIO, Exception GenericError, Console] es => List String -> App es ()
+mainAppInitVars : Has [PrimIO, FileIO, Exception GenericError, Console] es => List String -> App es ()
 mainAppInitVars args = new defaultConfig $ mainApp args
 
 mainAppNoexcept : Console es => Console (IOError :: es) => PrimIO (GenericError :: IOError :: es) => List String -> App es ()
@@ -230,5 +269,3 @@ main = do
   case args' of
     [] => putStrLn "Argument list is empty for some bizzare reason"
     (_::args) => run $ mainAppNoexcept args
-  -- putStrLn "Program generation"
-  -- printOnce 30 $ genProgram $ limit 5
