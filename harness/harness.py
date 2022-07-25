@@ -3,7 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
-
+from termcolor import colored
 
 if len(sys.argv) != 2:
     print("Usage:")
@@ -80,6 +80,11 @@ SKIP_MSG = "SKIP"
 max_msg_len = max(text_col_len(OK_MSG), text_col_len(FAIL_MSG), text_col_len(SKIP_MSG))
 
 col_length = [max(text_col_len(TEST_NAME_COL_HEADER), max(map(text_col_len, settings["tests"])))] + [max(text_col_len(stage), max_msg_len)  for stage in settings["stages"]]
+col_length_color = [w + 9 for w in col_length]
+col_length_color[0] -= 9
+
+print(col_length_color)
+print(col_length)
 
 header_row = [TEST_NAME_COL_HEADER] + settings["stages"]
 
@@ -108,14 +113,14 @@ for test in settings["tests"]:
         new_errors = verify_output(test, stage, result, test_config[stage])
 
         if len(new_errors) != 0:
-            output_row.append(FAIL_MSG)
+            output_row.append(colored(FAIL_MSG, 'red'))
             errors += new_errors
             break
 
-        output_row.append(OK_MSG)
+        output_row.append(colored(OK_MSG, 'green'))
 
-    output_row += [SKIP_MSG] * (len(col_length) - len(output_row))
-    print_row(output_row, col_length)
+    output_row += [colored(SKIP_MSG, 'yellow')] * (len(col_length) - len(output_row))
+    print_row(output_row, col_length_color)
 
 print_sep(col_length)
 print()
