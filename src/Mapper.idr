@@ -22,7 +22,7 @@ stmtToCode = (foldr ((++) . (++ "\n")) "") . reverse . stmtToCode' where
   stmtToCode' Empty = []
 
 mainClassToCode : MainClass -> String
-mainClassToCode (MkMain _ main) = "class Main {\npublic static void main(String[] args) {\n" ++ stmtToCode main ++ "}\n}\n"
+mainClassToCode (MkMain name main) = "class " ++ show name ++ " {\npublic static void main(String[] args) {\n" ++ stmtToCode main ++ "}\n}\n"
 
 export
 programToCode : Program -> String
@@ -30,4 +30,19 @@ programToCode (MkProgram x) = mainClassToCode x
 
 export
 programToOracle : Program -> String
-programToOracle prog = ""
+programToOracle (MkProgram (MkMain name main)) =  "{\n"
+                                               ++ "   \"compile\": {\n"
+                                               ++ "      \"returned\": \"0\",\n"
+                                               ++ "      \"stderr\": \"\",\n"
+                                               ++ "      \"stdout\": \"\"\n"
+                                               ++ "   \},\n"
+                                               ++ "   \"run\": {\n"
+                                               ++ "      \"returned\": \"0\",\n"
+                                               ++ "      \"stderr\": \"\",\n"
+                                               ++ "      \"stdout\": \"\"\n"
+                                               ++ "   \},\n"
+                                               ++ "   \"vars\": {\n"
+                                               ++ "      \"CLASSNAME\": \"" ++ show name ++ "\"\n"
+                                               ++ "   }\n"
+                                               ++ "}\n"
+

@@ -209,8 +209,21 @@ writeTest dir tot n prog = do
     throw
     (\f => fPutStr f $ programToOracle prog)
 
+softInit : List a -> List a
+softInit xs = maybe [] id $ init' xs
+
 writeMetadata : Has [FileIO, State AppConfig Config] es => String -> App es ()
-writeMetadata dir = pure ()
+writeMetadata dir = do
+  let file_path = dir ++ "/settings.json"
+  conf <- get AppConfig
+  withFile file_path WriteTruncate throw $ \f => do
+    fPutStrLn f $ "{"
+    fPutStrLn f $ "    \"executables\": [\"javac\", \"java\"],"
+    fPutStrLn f $ "    \"stages\": [\"compile\", \"run\"],"
+    fPutStrLn f $ "    \"compile\": \"javac " ++ dir ++ "/{TESTNAME}.java\","
+    fPutStrLn f $ "    \"run\": \"java -classpath " ++ dir ++ " {CLASSNAME}\","
+    fPutStrLn f $ "    \"tests\": " ++ show ([ "test" ++ show i | i <- softInit [0..conf.numTests] ])
+    fPutStrLn f $ "}"
 
 
 fileOp : Has [PrimIO, Exception IOError] es => IO (Either FileError a) -> App es a
