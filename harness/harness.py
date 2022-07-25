@@ -5,6 +5,42 @@ import subprocess
 import sys
 from termcolor import colored
 
+def text_col_len(string):
+    return len(string) + 2
+
+
+def print_row(text, width):
+    text = [ " " + msg + " " for msg in text]
+    text = [ msg + " " * (w - len(msg)) for (msg, w) in zip(text, width)]
+    print("|" + "|".join(text) + "|")
+
+
+def print_sep(width):
+    lines = ["-" * w for w in width]
+    print("+" + "+".join(lines) + "+")
+
+
+def verify_output(test, stage, result, expected):
+    # TODO think of a better way to compare and store these values
+    result.stdout = result.stdout.decode('utf-8')
+    result.stderr = result.stderr.decode('utf-8')
+
+    errors = []
+    if expected['returned'] is not None:
+        if str(result.returncode) != expected['returned']:
+            errors.append(("return code", expected['returned'], result.returncode, test, stage))
+
+    if expected['stdout'] is not None:
+        if result.stdout != expected['stdout']:
+            errors.append(("stdout", expected['stdout'], result.stdout, test, stage))
+
+    if expected ['stderr'] is not None:
+        if result.stderr != expected['stderr']:
+            errors.append(("stderr", expected['stderr'], result.stderr, test, stage))
+
+    return errors
+
+
 if len(sys.argv) != 2:
     print("Usage:")
     print("\t./harness.py <path-to-test-directory>")
@@ -40,38 +76,6 @@ for executable in settings["executables"]:
 print("All the executables were found, moving on to testing")
 print()
 
-def text_col_len(string):
-    return len(string) + 2
-
-def print_row(text, width):
-    text = [ " " + msg + " " for msg in text]
-    text = [ msg + " " * (w - len(msg)) for (msg, w) in zip(text, width)]
-    print("|" + "|".join(text) + "|")
-
-def print_sep(width):
-    lines = ["-" * w for w in width]
-    print("+" + "+".join(lines) + "+")
-
-def verify_output(test, stage, result, expected):
-    # TODO think of a better way to compare and store these values
-    result.stdout = result.stdout.decode('utf-8')
-    result.stderr = result.stderr.decode('utf-8')
-
-    errors = []
-    if expected['returned'] is not None:
-        if str(result.returncode) != expected['returned']:
-            errors.append(("return code", expected['returned'], result.returncode, test, stage))
-
-    if expected['stdout'] is not None:
-        if result.stdout != expected['stdout']:
-            errors.append(("stdout", expected['stdout'], result.stdout, test, stage))
-
-    if expected ['stderr'] is not None:
-        if result.stderr != expected['stderr']:
-            errors.append(("stderr", expected['stderr'], result.stderr, test, stage))
-
-    return errors
-
 TEST_NAME_COL_HEADER = "Test Name"
 OK_MSG = "OK"
 FAIL_MSG = "FAIL"
@@ -82,9 +86,6 @@ max_msg_len = max(text_col_len(OK_MSG), text_col_len(FAIL_MSG), text_col_len(SKI
 col_length = [max(text_col_len(TEST_NAME_COL_HEADER), max(map(text_col_len, settings["tests"])))] + [max(text_col_len(stage), max_msg_len)  for stage in settings["stages"]]
 col_length_color = [w + 9 for w in col_length]
 col_length_color[0] -= 9
-
-print(col_length_color)
-print(col_length)
 
 header_row = [TEST_NAME_COL_HEADER] + settings["stages"]
 
