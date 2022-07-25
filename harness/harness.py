@@ -136,10 +136,3 @@ for (ty, expected, got, test, stage) in errors:
     print("Got: \"{}\"".format(got))
     print()
 
-# Output looks like this
-
-# +--------+---------+---------+-----+---------+
-# | Tes    | Stage 1 | Stage 2 | ... | Stage N |
-# +--------+---------+---------+-----+---------+
-# | Test 0 | OK      | OK      |     | OK      |
-# | Test 1 | OK      | FAIL    |     | SKIP    |
