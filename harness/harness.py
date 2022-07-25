@@ -53,6 +53,10 @@ def print_sep(width):
     print("+" + "+".join(lines) + "+")
 
 def verify_output(test, stage, result, expected):
+    # TODO think of a better way to compare and store these values
+    result.stdout = result.stdout.decode('utf-8')
+    result.stderr = result.stderr.decode('utf-8')
+
     errors = []
     if expected['returned'] is not None:
         if str(result.returncode) != expected['returned']:
@@ -116,7 +120,15 @@ for test in settings["tests"]:
 print_sep(col_length)
 print()
 
-print(errors)
+if len(errors) == 0:
+    print("No errors were found")
+    exit(0)
+
+for (ty, expected, got, test, stage) in errors:
+    print("Test: {}, stage: {}, mismatch in {}".format(test, stage, ty))
+    print("Expected: \"{}\"".format(expected))
+    print("Got: \"{}\"".format(got))
+    print()
 
 # Output looks like this
 
