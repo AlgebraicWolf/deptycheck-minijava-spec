@@ -5,13 +5,14 @@ import subprocess
 import sys
 from termcolor import colored
 
+
 def text_col_len(string):
     return len(string) + 2
 
 
 def print_row(text, width):
-    text = [ " " + msg + " " for msg in text]
-    text = [ msg + " " * (w - len(msg)) for (msg, w) in zip(text, width)]
+    text = [" " + msg + " " for msg in text]
+    text = [msg + " " * (w - len(msg)) for (msg, w) in zip(text, width)]
     print("|" + "|".join(text) + "|")
 
 
@@ -28,15 +29,18 @@ def verify_output(test, stage, result, expected):
     errors = []
     if expected['returned'] is not None:
         if str(result.returncode) != expected['returned']:
-            errors.append(("return code", expected['returned'], result.returncode, test, stage))
+            errors.append(
+                ("return code", expected['returned'], result.returncode, test, stage))
 
     if expected['stdout'] is not None:
         if result.stdout != expected['stdout']:
-            errors.append(("stdout", expected['stdout'], result.stdout, test, stage))
+            errors.append(
+                ("stdout", expected['stdout'], result.stdout, test, stage))
 
-    if expected ['stderr'] is not None:
+    if expected['stderr'] is not None:
         if result.stderr != expected['stderr']:
-            errors.append(("stderr", expected['stderr'], result.stderr, test, stage))
+            errors.append(
+                ("stderr", expected['stderr'], result.stderr, test, stage))
 
     return errors
 
@@ -51,7 +55,8 @@ if testdir[-1] != '/':
     testdir += '/'
 
 if not os.access(testdir + "settings.json", os.R_OK):
-    raise FileNotFoundError("settings.json either does not exist, or program does not have permission to read it")
+    raise FileNotFoundError(
+        "settings.json either does not exist, or program does not have permission to read it")
 
 f = open(testdir + "settings.json", "r")
 settings = json.load(f)
@@ -67,7 +72,8 @@ if "tests" not in settings:
 
 for stage in settings['stages']:
     if stage not in settings:
-        raise ValueError("description of stage \"{}\" is not present".format(stage))
+        raise ValueError(
+            "description of stage \"{}\" is not present".format(stage))
 
 print("Checking environment...")
 for executable in settings["executables"]:
@@ -81,9 +87,11 @@ OK_MSG = "OK"
 FAIL_MSG = "FAIL"
 SKIP_MSG = "SKIP"
 
-max_msg_len = max(text_col_len(OK_MSG), text_col_len(FAIL_MSG), text_col_len(SKIP_MSG))
+max_msg_len = max(text_col_len(OK_MSG), text_col_len(
+    FAIL_MSG), text_col_len(SKIP_MSG))
 
-col_length = [max(text_col_len(TEST_NAME_COL_HEADER), max(map(text_col_len, settings["tests"])))] + [max(text_col_len(stage), max_msg_len)  for stage in settings["stages"]]
+col_length = [max(text_col_len(TEST_NAME_COL_HEADER), max(map(text_col_len, settings["tests"])))
+              ] + [max(text_col_len(stage), max_msg_len) for stage in settings["stages"]]
 col_length_color = [w + 9 for w in col_length]
 col_length_color[0] -= 9
 
@@ -120,7 +128,8 @@ for test in settings["tests"]:
 
         output_row.append(colored(OK_MSG, 'green'))
 
-    output_row += [colored(SKIP_MSG, 'yellow')] * (len(col_length) - len(output_row))
+    output_row += [colored(SKIP_MSG, 'yellow')] * \
+        (len(col_length) - len(output_row))
     print_row(output_row, col_length_color)
 
 print_sep(col_length)
@@ -135,4 +144,3 @@ for (ty, expected, got, test, stage) in errors:
     print("Expected: \"{}\"".format(expected))
     print("Got: \"{}\"".format(got))
     print()
-
