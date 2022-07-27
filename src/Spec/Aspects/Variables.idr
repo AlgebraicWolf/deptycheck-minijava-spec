@@ -27,27 +27,48 @@ Eq Identifier where
 --- Non-polymorphic variable storage ---
 --- At this stage variables do not have a name, since we can assign them later
 public export
+data Variable : Type where
+  MkVar : JType -> Bool -> Variable
+
+public export
+typeOf : Variable -> JType
+typeOf (MkVar ty _) = ty
+
+public export
+initOf : Variable -> Bool
+initOf (MkVar _ usage) = usage
+
+public export
 data Variables : Nat -> Type where
   Nil : Variables Z
-  (::) : JType -> Variables n -> Variables (S n)
+  (::) : Variable -> Variables n -> Variables (S n)
 
 %name Variables vars
 
 public export
 data IsOfType : (n : Nat) -> (k : Fin n) -> (jty : JType) -> (vars : Variables n) -> Type where
-  Here : IsOfType (S n) FZ jty (jty::vars)
-  There : IsOfType n k jty vars -> IsOfType (S n) (FS k) jty (jty'::vars)
+  THere : IsOfType (S n) FZ jty ((MkVar jty usage)::vars)
+  TThere : IsOfType n k jty vars -> IsOfType (S n) (FS k) jty (var::vars)
+
+public export
+data IsInit : (n : Nat) -> (k : Fin n) -> (vars : Variables n) -> Type where
+  IHere : IsInit (S n) FZ ((MkVar jty True)::vars)
+  IThere : IsInit n k vars -> IsInit (S n) (FS k) (var::vars)
 
 public export
 getType : Fin n -> Variables n -> JType
-getType FZ (x :: vars) = x
+getType FZ (var :: vars) = typeOf var
 getType (FS n) (y :: vars) = getType n vars
 
 public export
-eqToProof : (k : Fin n) -> (vars : Variables n) -> (jty : JType) -> (getType k vars = jty) -> IsOfType n k jty vars
-eqToProof k [] jty prf impossible
-eqToProof FZ (x :: vars) jty prf = rewrite prf in Here
-eqToProof (FS y) (x :: vars) jty prf = There $ eqToProof y vars jty prf
+getInit : Fin n -> Variables n -> Bool
+getInit FZ (var :: vars) = initOf var
+getInit (FS n) (y :: vars) = getInit n vars
+
+public export
+makeInit : Fin n -> Variables n -> Variables n
+makeInit FZ ((MkVar jty _) :: vars) = (MkVar jty True) :: vars
+makeInit (FS n) (y :: vars) = y :: makeInit n vars
 
 public export
 DecEq JType where

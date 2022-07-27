@@ -9,7 +9,7 @@ data Expression : (n : Nat) -> (vars : Variables n) -> (result : JType) -> Type 
   BoolTrue : Expression n vars JBool
   BoolFalse : Expression n vars JBool
   IntegerLiteral : Int -> Expression n vars JInt
-  FromIdentifier : (k : Fin n) -> IsOfType n k jty vars => Expression n vars jty
+  FromIdentifier : (k : Fin n) -> IsOfType n k jty vars => IsInit n k vars => Expression n vars jty
 
 export
 Show (Expression n vars res) where
