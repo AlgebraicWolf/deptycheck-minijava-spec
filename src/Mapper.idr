@@ -8,17 +8,17 @@ typeToCode : JType -> String
 typeToCode JBool = "boolean"
 typeToCode JInt = "int"
 
-exprToCode : {n : Nat} -> {vars : Variables n} -> Expression n vars res -> String
+exprToCode : {vars : Variables} -> Expression vars res -> String
 exprToCode BoolTrue = "true"
 exprToCode BoolFalse = "false"
 exprToCode (IntegerLiteral x) = show x
-exprToCode {n = (S m)} (FromIdentifier k) = "x" ++ show (the (Fin (S m)) last - k)
+exprToCode (FromIdentifier k) = "x" ++ show (minus (length vars) k)
 
-stmtToCode : {n : Nat} -> {vars : Variables n} -> Statement n vars -> String
+stmtToCode : {vars : Variables} -> Statement vars -> String
 stmtToCode = (foldr ((++) . (++ "\n")) "") . reverse . stmtToCode' where
-  stmtToCode' : {n : Nat} -> {vars : Variables n} -> Statement n vars -> List String
-  stmtToCode' {n = S k} (VarDeclaration type stmt) = (typeToCode type ++ " x" ++ show k ++ ";") ::(stmtToCode' stmt)
-  stmtToCode' (Assignment k expr stmt _) = ("x" ++ show (complement k) ++ " = " ++ exprToCode expr ++ ";")::(stmtToCode' stmt)
+  stmtToCode' : {v : Variables} -> Statement v -> List String
+  stmtToCode' (VarDeclaration type stmt) = (typeToCode type ++ " x" ++ show (minus (length v) 1) ++ ";")::(stmtToCode' stmt)
+  stmtToCode' (Assignment vars' k expr stmt) = ("x" ++ show (complement k) ++ " = " ++ exprToCode expr ++ ";")::(stmtToCode' stmt)
   stmtToCode' Empty = []
 
 mainClassToCode : MainClass -> String
