@@ -2,11 +2,13 @@ module Spec.Class
 
 import public Spec.Statement
 
+%default total
+
 -- For now, the main class shall contain the only method "main"
 public export
 data MainClass : Type where
   -- There are no global variables yet. Thus, statement should not expect any variables to be available
-  MkMain : {m : Nat} -> {vars : Variables m} -> (n : Identifier) -> (main : Statement m vars) -> MainClass
+  MkMain : {vars : Variables} -> (n : Identifier) -> (main : Statement vars) -> MainClass
 
 -- For now, the wrapper is useless, but I left it for expansion purposes
 public export

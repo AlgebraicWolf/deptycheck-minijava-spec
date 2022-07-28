@@ -1,5 +1,7 @@
 module Spec.Aspects.Types
 
+%default total
+
 public export
 data JType = JBool | JInt
 
