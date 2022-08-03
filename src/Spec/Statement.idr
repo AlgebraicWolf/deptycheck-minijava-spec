@@ -12,13 +12,20 @@ import public Spec.Expression
 -- 'usual' statements and variable declarations
 
 public export
-data Statement : (vars : Variables) -> Type where
+data Statement : (vars : Variables) -> (init : InitializedVariables) -> Type where
   VarDeclaration : (type : JType) ->
-                   Statement vars ->
-                   Statement ((MkVar type False)::vars)
-  Assignment : (vars : Variables) -> (k : Fin $ length vars) ->
-               (expr : Expression vars (getType vars k)) ->
-               (stmt : Statement vars) ->
-               Statement (makeInit vars k)
-  Empty : Statement []
+                   (name : Nat) ->
+                   Statement vars init ->
+                   (prf : VariableDoesNotExist (MkVar name type) vars) =>
+                   Statement ((MkVar name type)::vars) init
+
+  Assignment : (vars : Variables) ->
+               (name : Nat) ->
+               (jty : JType) ->
+               (expr : Expression vars init jty) ->
+               (stmt : Statement vars init) ->
+               ExistsOfType name jty vars =>
+               Statement vars (name::init)
+
+  Empty : Statement [] []
 

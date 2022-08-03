@@ -15,10 +15,11 @@ UsedConstructorDerivator = LeastEffort
 %logging "deptycheck.derive" 5
 
 export
-genExpressionVars : Fuel ->
+genExpressionVarsInit : Fuel ->
                 (Fuel -> Gen Int) =>
                 (Fuel -> Gen JType) =>
-                (Fuel -> (n : Nat) -> Gen $ Fin n) =>
-                (res : JType) ->
-                Gen $ (vars : Variables ** Expression vars res)
-genExpressionVars = deriveGen
+                (Fuel -> (vars : Variables) -> Gen (name : Nat ** jty : JType ** ExistsOfType name jty vars)) =>
+                (vars : Variables) ->
+                (init : InitializedVariables) ->
+                Gen (res : JType ** Expression vars init res)
+genExpressionVarsInit = deriveGen
