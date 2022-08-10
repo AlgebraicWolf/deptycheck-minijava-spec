@@ -18,9 +18,12 @@ export
 genStatement : Fuel ->
                (Fuel -> Gen JType) =>
                (Fuel -> Gen Int) =>
-               (Fuel -> (n : Nat) -> Gen $ Fin n) =>
-               (Fuel -> (vars : Variables) -> (res : JType) -> Gen $ Expression vars res) =>
-               (Fuel -> (vars : Variables) -> Gen $ Statement vars) =>
-               (Fuel -> (res : JType) -> Gen (vars : Variables ** Expression vars res)) =>
-               Gen $ (vars : Variables ** Statement vars)
-genStatement = ?genStatement_rhs
+               (Fuel -> (vars : Variables) -> Gen (name : Nat ** jty : JType ** ExistsOfType name jty vars)) =>
+               (Fuel -> (name : Nat) -> (vars : Variables) -> Gen (jty : JType ** ExistsOfType name jty vars)) =>
+               (Fuel -> (jty : JType) -> (vars : Variables) -> Gen (name : Nat ** ExistsOfType name jty vars)) =>
+               (Fuel -> (name : Nat) -> (jty : JType) -> (vars : Variables) -> Gen $ ExistsOfType name jty vars) =>
+               (Fuel -> (vars : Variables) -> (init : InitializedVariables) -> (result : JType) -> Gen $ Expression vars init result) =>
+               (Fuel -> (vars : Variables) -> (init : InitializedVariables) -> Gen (result : JType ** Expression vars init result)) =>
+               (Fuel -> (vars : Variables) -> (init : InitializedVariables) -> Gen $ Statement vars init) =>
+               Gen $ (vars : Variables ** init : InitializedVariables ** Statement vars init)
+-- genStatement = deriveGen

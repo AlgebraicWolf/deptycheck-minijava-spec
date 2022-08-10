@@ -18,10 +18,10 @@ export
 genExpression : Fuel ->
                 (Fuel -> Gen Int) =>
                 (Fuel -> Gen JType) =>
-                (Fuel -> (n : Nat) -> Gen $ Fin n) =>
-                (Fuel -> (res : JType) -> Gen $ (vars : Variables ** Expression vars res)) =>
+                (Fuel -> (name : Nat) -> (jty : JType) -> (vars : Variables) -> Gen $ ExistsOfType name jty vars) =>
+                (Fuel -> (jty : JType) -> (vars : Variables) -> Gen (name : Nat ** ExistsOfType name jty vars)) =>
                 (vars : Variables)  ->
+                (init : InitializedVariables) ->
                 (res : JType) ->
-                Gen $ Expression vars res
+                Gen $ Expression vars init res
 genExpression = deriveGen
--- genExpression = ?genExpression_rhs
