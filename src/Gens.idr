@@ -24,7 +24,7 @@ genJType : Fuel -> Gen JType
 genJType _ = elements [JBool, JInt]
 
 genInt : Fuel -> Gen Int
-genInt _ = elements [0]
+genInt _ = elements [-5..5]
 
 genFin : Fuel -> (n : Nat) -> Gen $ Fin n
 genFin _ Z = empty
@@ -37,42 +37,42 @@ variablesToList (var :: vars) = var :: variablesToList vars
 variablesToGen : Variables -> Gen Variable
 variablesToGen = elements . variablesToList
 
-listExistsOfTypeVars : (vars : Variables) -> List (name : Nat ** jty : JType ** ExistsOfType name jty vars)
+listExistsOfTypeVars : (vars : Variables) -> List (nm : Nat ** jty : JType ** ExistsOfType nm jty vars)
 listExistsOfTypeVars [] = []
-listExistsOfTypeVars ((::) @{NameAvailable prf} (MkVar name jty) vars') = (name ** jty ** THere) :: ((\(name ** jty ** p) => (name ** jty ** TThere p)) <$> (listExistsOfTypeVars vars'))
+listExistsOfTypeVars ((::) @{NameAvailable prf} (MkVar nm jty) vars') = (nm ** jty ** THere) :: ((\(nm ** jty ** p) => (nm ** jty ** TThere p)) <$> (listExistsOfTypeVars vars'))
 
-listExistsOfTypeJTypeVars : (jty : JType) -> (vars : Variables) -> List (name : Nat ** ExistsOfType name jty vars)
+listExistsOfTypeJTypeVars : (jty : JType) -> (vars : Variables) -> List (nm : Nat ** ExistsOfType nm jty vars)
 listExistsOfTypeJTypeVars jty vars = catMaybes $ (filterByJType <$> listExistsOfTypeVars vars) where
-  filterByJType : (name : Nat ** jty' : JType ** ExistsOfType name jty' vars) -> Maybe (name : Nat ** ExistsOfType name jty vars)
-  filterByJType (name ** jty' ** p) = case jty `decEq` jty' of
-                                            (Yes prf) => rewrite prf in Just (name ** p)
+  filterByJType : (nm : Nat ** jty' : JType ** ExistsOfType nm jty' vars) -> Maybe (nm : Nat ** ExistsOfType nm jty vars)
+  filterByJType (nm ** jty' ** p) = case jty `decEq` jty' of
+                                            (Yes prf) => rewrite prf in Just (nm ** p)
                                             (No contra) => Nothing
 
-listExistsOfTypeNameVars : (name : Nat) -> (vars : Variables) -> List (jty : JType ** ExistsOfType name jty vars)
-listExistsOfTypeNameVars name vars = catMaybes $ filterByName <$> listExistsOfTypeVars vars where
-  filterByName : (name' : Nat ** jty : JType ** ExistsOfType name' jty vars) -> Maybe (jty : JType ** ExistsOfType name jty vars)
-  filterByName (name' ** snd) = case name `decEq` name' of
+listExistsOfTypeNameVars : (nm : Nat) -> (vars : Variables) -> List (jty : JType ** ExistsOfType nm jty vars)
+listExistsOfTypeNameVars nm vars = catMaybes $ filterByName <$> listExistsOfTypeVars vars where
+  filterByName : (nm' : Nat ** jty : JType ** ExistsOfType nm' jty vars) -> Maybe (jty : JType ** ExistsOfType nm jty vars)
+  filterByName (nm' ** snd) = case nm `decEq` nm' of
                                           (Yes prf) => rewrite prf in Just snd
                                           (No contra) => Nothing
 
-listExistsOfTypeNameJTypeVars : (name : Nat) -> (jty : JType) -> (vars : Variables) -> List $ ExistsOfType name jty vars
-listExistsOfTypeNameJTypeVars name jty vars = catMaybes $ filterByName <$> listExistsOfTypeJTypeVars jty vars where
-  filterByName : (name' : Nat ** ExistsOfType name' jty vars) -> Maybe $ ExistsOfType name jty vars
-  filterByName (name' ** p) = case name `decEq` name' of
+listExistsOfTypeNameJTypeVars : (nm : Nat) -> (jty : JType) -> (vars : Variables) -> List $ ExistsOfType nm jty vars
+listExistsOfTypeNameJTypeVars nm jty vars = catMaybes $ filterByName <$> listExistsOfTypeJTypeVars jty vars where
+  filterByName : (nm' : Nat ** ExistsOfType nm' jty vars) -> Maybe $ ExistsOfType nm jty vars
+  filterByName (nm' ** p) = case nm `decEq` nm' of
                                    (Yes prf) => rewrite prf in Just p
                                    (No contra) => Nothing
 
-genExistsOfTypeVars : Fuel -> (vars : Variables) -> Gen (name : Nat ** jty : JType ** ExistsOfType name jty vars)
+genExistsOfTypeVars : Fuel -> (vars : Variables) -> Gen (nm : Nat ** jty : JType ** ExistsOfType nm jty vars)
 genExistsOfTypeVars _ vars = elements $ listExistsOfTypeVars vars
 
-genExistsOfTypeJTypeVars : Fuel -> (jty : JType) -> (vars : Variables) -> Gen (name : Nat ** ExistsOfType name jty vars)
+genExistsOfTypeJTypeVars : Fuel -> (jty : JType) -> (vars : Variables) -> Gen (nm : Nat ** ExistsOfType nm jty vars)
 genExistsOfTypeJTypeVars _ jty vars = elements $ listExistsOfTypeJTypeVars jty vars
 
-genExistsOfTypeNameVars : Fuel -> (name : Nat) -> (vars : Variables) -> Gen (jty : JType ** ExistsOfType name jty vars)
-genExistsOfTypeNameVars _ name vars = elements $ listExistsOfTypeNameVars name vars
+genExistsOfTypeNameVars : Fuel -> (nm : Nat) -> (vars : Variables) -> Gen (jty : JType ** ExistsOfType nm jty vars)
+genExistsOfTypeNameVars _ nm vars = elements $ listExistsOfTypeNameVars nm vars
 
-genExistsOfTypeNameJTypeVars : Fuel -> (name : Nat) -> (jty : JType) -> (vars : Variables) -> Gen $ ExistsOfType name jty vars
-genExistsOfTypeNameJTypeVars _ name jty vars = elements $ listExistsOfTypeNameJTypeVars name jty vars
+genExistsOfTypeNameJTypeVars : Fuel -> (nm : Nat) -> (jty : JType) -> (vars : Variables) -> Gen $ ExistsOfType nm jty vars
+genExistsOfTypeNameJTypeVars _ nm jty vars = elements $ listExistsOfTypeNameJTypeVars nm jty vars
 
 genExpressionVarsInit' : Fuel ->
                          (vars : Variables) ->
