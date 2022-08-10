@@ -1,0 +1,3 @@
+[submodule "thirdparty/MiniJava_Interpreter"]
+	path = thirdparty/MiniJava_Interpreter
+	url = https://github.com/AlgebraicWolf/MiniJava_Interpreter
