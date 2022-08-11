@@ -21,10 +21,12 @@ def print_sep(width):
     print("+" + "+".join(lines) + "+")
 
 
-def verify_output(test, stage, result, expected):
-    # TODO think of a better way to compare and store these values
-    result.stdout = result.stdout.decode('utf-8')
-    result.stderr = result.stderr.decode('utf-8')
+def verify_output(test, stage, result, expected, testdir):
+    result.stdout = result.stdout
+    result.stderr = result.stderr
+
+    expected['stdout'] = testdir + expected['stdout']
+    expected['stderr'] = testdir + expected['stderr']
 
     errors = []
     if expected['returned'] is not None:
@@ -33,14 +35,26 @@ def verify_output(test, stage, result, expected):
                 ("return code", expected['returned'], result.returncode, test, stage))
 
     if expected['stdout'] is not None:
-        if result.stdout != expected['stdout']:
+        if not os.access(expected['stdout'], os.R_OK):
             errors.append(
-                ("stdout", expected['stdout'], result.stdout, test, stage))
+                    ("stdout", "File Not Found", "", test, stage))
+        else:
+            f = open(expected['stdout'], "rb")
+            value = f.read()
+            if result.stdout != value:
+                errors.append(
+                    ("stdout", value.decode('utf-8'), result.stdout.decode('utf-8'), test, stage))
 
     if expected['stderr'] is not None:
-        if result.stderr != expected['stderr']:
+        if not os.access(expected['stderr'], os.R_OK):
             errors.append(
-                ("stderr", expected['stderr'], result.stderr, test, stage))
+                    ("stderr", "File Not Fount", "", test, stage))
+        else:
+            f = open(expected['stderr'], "rb")
+            value = f.read()
+            if result.stderr != value:
+                errors.append(
+                    ("stderr", value.decode('utf-8'), result.stderr.decode('utf-8'), test, stage))
 
     return errors
 
@@ -112,7 +126,7 @@ def process_test_suite(testdir):
         for stage in settings["stages"]:
             executable = settings[stage].format(**variables)
             result = subprocess.run(executable.split(' '), capture_output=True)
-            new_errors = verify_output(test, stage, result, test_config[stage])
+            new_errors = verify_output(test, stage, result, test_config[stage], testdir)
 
             if len(new_errors) != 0:
                 output_row.append(colored(FAIL_MSG, 'red'))
@@ -148,7 +162,7 @@ if __name__ == "__main__":
     for testdir in sys.argv[1:]:
         if testdir[-1] != '/':
             testdir += '/'
-        
+
         print()
         print("Processing test suite {}".format(testdir))
         process_test_suite(testdir)
