@@ -22,41 +22,48 @@ def print_sep(width):
 
 
 def verify_output(test, stage, result, expected, testdir):
-    result.stdout = result.stdout
-    result.stderr = result.stderr
-
-    expected['stdout'] = testdir + expected['stdout']
-    expected['stderr'] = testdir + expected['stderr']
-
     errors = []
     if expected['returned'] is not None:
         if str(result.returncode) != expected['returned']:
             errors.append(
                 ("return code", expected['returned'], result.returncode, test, stage))
 
-    if expected['stdout'] is not None:
-        if not os.access(expected['stdout'], os.R_OK):
+    if expected['stdout'] is not None and expected['stdout']['type'] == 'compare':
+        if not os.access(expected['stdout']['value'], os.R_OK):
             errors.append(
                     ("stdout", "File Not Found", "", test, stage))
         else:
-            f = open(expected['stdout'], "rb")
+            f = open(expected['stdout']['value'], "rb")
             value = f.read()
             if result.stdout != value:
                 errors.append(
                     ("stdout", value.decode('utf-8'), result.stdout.decode('utf-8'), test, stage))
 
-    if expected['stderr'] is not None:
-        if not os.access(expected['stderr'], os.R_OK):
+    if expected['stderr'] is not None and expected['stderr']['type'] == 'compare':
+        if not os.access(expected['stderr']['value'], os.R_OK):
             errors.append(
                     ("stderr", "File Not Fount", "", test, stage))
         else:
-            f = open(expected['stderr'], "rb")
+            f = open(expected['stderr']['value'], "rb")
             value = f.read()
             if result.stderr != value:
                 errors.append(
                     ("stderr", value.decode('utf-8'), result.stderr.decode('utf-8'), test, stage))
 
     return errors
+
+
+def pick_out_dst(config):
+    if config is None:
+        return subprocess.DEVNULL
+
+    match config['type']:
+        case 'write':
+            return open(config['value'], 'wb')
+        case 'compare':
+            return subprocess.PIPE
+
+    return subprocess.DEVNULL
 
 
 def process_test_suite(testdir):
@@ -118,6 +125,12 @@ def process_test_suite(testdir):
         f = open(testdir + test + ".json", "r")
         test_config = json.load(f)
 
+        for stage in settings['stages']:
+            if test_config[stage]['stdout'] is not None:
+                test_config[stage]['stdout']['value'] = testdir + test_config[stage]['stdout']['value']
+            if test_config[stage]['stderr'] is not None:
+                test_config[stage]['stderr']['value'] = testdir + test_config[stage]['stderr']['value']
+
         variables = test_config["vars"]
         variables["TESTNAME"] = test
 
@@ -125,7 +138,11 @@ def process_test_suite(testdir):
 
         for stage in settings["stages"]:
             executable = settings[stage].format(**variables)
-            result = subprocess.run(executable.split(' '), capture_output=True)
+
+            stdout_dst = pick_out_dst(test_config[stage]['stdout'])
+            stderr_dst = pick_out_dst(test_config[stage]['stderr'])
+
+            result = subprocess.run(executable.split(' '), stdout=stdout_dst, stderr=stderr_dst)
             new_errors = verify_output(test, stage, result, test_config[stage], testdir)
 
             if len(new_errors) != 0:
