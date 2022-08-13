@@ -19,6 +19,7 @@ stmtToCode = (foldr ((++) . (++ "\n")) "") . reverse . stmtToCode' where
   stmtToCode' : {v : Variables} -> Statement v init' -> List String
   stmtToCode' (VarDeclaration type name stmt) = (typeToCode type ++ " x" ++ show name ++ ";")::(stmtToCode' stmt)
   stmtToCode' (Assignment vars' name _ expr stmt) = ("x" ++ show name ++ " = " ++ exprToCode expr ++ ";")::(stmtToCode' stmt)
+  stmtToCode' (Print expr stmt) = ("System.out.println(" ++ exprToCode expr ++ ");")::(stmtToCode' stmt)
   stmtToCode' Empty = []
 
 mainClassToCode : MainClass -> String
