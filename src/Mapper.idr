@@ -24,23 +24,53 @@ stmtToCode = (foldr ((++) . (++ "\n")) "") . reverse . stmtToCode' where
 mainClassToCode : MainClass -> String
 mainClassToCode (MkMain name main) = "class " ++ show name ++ " {\npublic static void main(String[] args) {\n" ++ stmtToCode main ++ "}\n}\n"
 
+mainClassToMiniJavaCode : MainClass -> String
+mainClassToMiniJavaCode (MkMain name main) = "class " ++ show name ++ " {\npublic static void main() {\n" ++ stmtToCode main ++ "}\n}\n"
+
 export
 programToCode : Program -> String
 programToCode (MkProgram x) = mainClassToCode x
 
 export
+programToMiniJavaCode : Program -> String
+programToMiniJavaCode (MkProgram x) = mainClassToMiniJavaCode x
+
+export
 programToOracle : Program -> String
 programToOracle (MkProgram (MkMain name main)) =  "{\n"
-                                               ++ "   \"compile\": {\n"
+                                               ++ "   \"oracle_compile\": {\n"
                                                ++ "      \"returned\": \"0\",\n"
-                                               ++ "      \"stderr\": \"empty\",\n"
-                                               ++ "      \"stdout\": \"empty\"\n"
+                                               ++ "      \"stderr\": {\n"
+                                               ++ "         \"type\": \"compare\",\n"
+                                               ++ "         \"value\": \"empty\"\n"
+                                               ++ "      },\n"
+                                               ++ "      \"stdout\": {\n"
+                                               ++ "         \"type\": \"compare\",\n"
+                                               ++ "         \"value\": \"empty\"\n"
+                                               ++ "      }\n"
                                                ++ "   \},\n"
-                                               ++ "   \"run\": {\n"
+                                               ++ "   \"oracle_run\": {\n"
                                                ++ "      \"returned\": \"0\",\n"
-                                               ++ "      \"stderr\": \"empty\",\n"
-                                               ++ "      \"stdout\": \"empty\"\n"
+                                               ++ "      \"stderr\": {\n"
+                                               ++ "         \"type\": \"compare\",\n"
+                                               ++ "         \"value\": \"empty\"\n"
+                                               ++ "      },\n"
+                                               ++ "      \"stdout\": {\n"
+                                               ++ "         \"type\": \"write\",\n"
+                                               ++ "         \"value\": \"output\"\n"
+                                               ++ "      }\n"
                                                ++ "   \},\n"
+                                               ++ "   \"interpreter\": {\n"
+                                               ++ "      \"returned\": \"0\",\n"
+                                               ++ "      \"stderr\": {\n"
+                                               ++ "         \"type\": \"compare\",\n"
+                                               ++ "         \"value\": \"empty\"\n"
+                                               ++ "      },\n"
+                                               ++ "      \"stdout\": {\n"
+                                               ++ "         \"type\": \"compare\",\n"
+                                               ++ "         \"value\": \"output\"\n"
+                                               ++ "      }\n"
+                                               ++ "   },\n"
                                                ++ "   \"vars\": {\n"
                                                ++ "      \"CLASSNAME\": \"" ++ show name ++ "\"\n"
                                                ++ "   }\n"
