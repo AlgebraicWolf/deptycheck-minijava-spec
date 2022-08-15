@@ -22,3 +22,4 @@ minijava:
 clean:
 	${IDRIS2} --clean real-thing-deptycheck-tested.ipkg
 	${RM} -r build
+	${MAKE} -C thirdparty/MiniJava_Interpreter -f minijava.mk clean
