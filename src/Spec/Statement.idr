@@ -27,5 +27,9 @@ data Statement : (vars : Variables) -> (init : InitializedVariables) -> Type whe
                ExistsOfType name jty vars =>
                Statement vars (name::init)
 
+  Print : Expression vars init jty ->
+          Statement vars init ->
+          Statement vars init
+
   Empty : Statement [] []
 

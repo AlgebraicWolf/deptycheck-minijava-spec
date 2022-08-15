@@ -200,11 +200,15 @@ writeTest : Has [Console, FileIO] es => String -> Nat -> Nat -> Program -> App e
 writeTest dir tot n prog = do
   let path = dir ++ "/" ++ "test" ++ show n
   let test_path = path ++ ".java"
+  let test_minijava_path = path ++ ".mjava"
   let oracle_path = path ++ ".json"
   putStrLn $ "Saving test " ++ show (S n) ++ "/" ++ show tot
   withFile test_path WriteTruncate
     throw
     (\f => fPutStr f $ programToCode prog)
+  withFile test_minijava_path WriteTruncate
+    throw
+    (\f => fPutStr f $ programToMiniJavaCode prog)
   withFile oracle_path WriteTruncate
     throw
     (\f => fPutStr f $ programToOracle prog)
@@ -215,16 +219,21 @@ softInit xs = maybe [] id $ init' xs
 writeMetadata : Has [FileIO, State AppConfig Config] es => String -> App es ()
 writeMetadata dir = do
   let file_path = dir ++ "/settings.json"
+  let empty_path = dir ++ "/empty"
+
   conf <- get AppConfig
+
   withFile file_path WriteTruncate throw $ \f => do
     fPutStrLn f $ "{"
-    fPutStrLn f $ "    \"executables\": [\"javac\", \"java\"],"
-    fPutStrLn f $ "    \"stages\": [\"compile\", \"run\"],"
-    fPutStrLn f $ "    \"compile\": \"javac " ++ dir ++ "/{TESTNAME}.java\","
-    fPutStrLn f $ "    \"run\": \"java -classpath " ++ dir ++ " {CLASSNAME}\","
+    fPutStrLn f $ "    \"executables\": [\"javac\", \"java\", \"thirdparty/MiniJava_Interpreter/build/mini_java\"],"
+    fPutStrLn f $ "    \"stages\": [\"oracle_compile\", \"oracle_run\", \"interpreter\"],"
+    fPutStrLn f $ "    \"oracle_compile\": \"javac " ++ dir ++ "/{TESTNAME}.java\","
+    fPutStrLn f $ "    \"oracle_run\": \"java -classpath " ++ dir ++ " {CLASSNAME}\","
+    fPutStrLn f $ "    \"interpreter\": \"thirdparty/MiniJava_Interpreter/build/mini_java " ++ dir ++ "/{TESTNAME}.mjava\","
     fPutStrLn f $ "    \"tests\": " ++ show ([ "test" ++ show i | i <- softInit [0..conf.numTests] ])
     fPutStrLn f $ "}"
 
+  withFile empty_path WriteTruncate throw (\_ => pure ())
 
 fileOp : Has [PrimIO, Exception IOError] es => IO (Either FileError a) -> App es a
 fileOp fileRes = do Right res <- primIO fileRes
