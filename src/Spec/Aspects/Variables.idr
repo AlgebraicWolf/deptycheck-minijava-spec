@@ -1,6 +1,6 @@
 module Spec.Aspects.Variables
 
-import Decidable.Equality.Core
+import Decidable.Equality
 import Data.Fin
 
 import public Spec.Aspects.Types
@@ -32,8 +32,23 @@ data InitState : Type where
   Init : InitState
 
 public export
+DecEq InitState where
+  decEq NotInit NotInit = Yes Refl
+  decEq Init Init = Yes Refl
+  decEq NotInit Init = No $ \case Refl impossible
+  decEq Init NotInit = No $ \case Refl impossible
+
+public export
 data Variable : Type where
   MkVar : Nat -> JType -> InitState -> Variable
+
+public export
+DecEq Variable where
+  decEq (MkVar nm jty init) (MkVar nm' jty' init') = case (decEq nm nm', decEq jty jty', decEq init init') of
+                                                       (Yes Refl, Yes Refl, Yes Refl) => Yes Refl
+                                                       (No contra, _, _) => No $ \case Refl => contra Refl
+                                                       (_, No contra, _) => No $ \case Refl => contra Refl
+                                                       (_, _, No contra) => No $ \case Refl => contra Refl
 
 public export
 data NatNotEqual : Nat -> Nat -> Type where
@@ -83,11 +98,39 @@ data VariableDoesNotExist : Variable -> Variables -> Type where
 
 %name Variables vars
 
-%hint
-public export
-nonExistenceTransform : VariableDoesNotExist (MkVar name jty init) vars -> VariableDoesNotExist (MkVar name jty init') vars
-nonExistenceTransform (NameAvailable prf) = NameAvailable prf
+natNotEqualUniqueness : (prf : NatNotEqual n m) -> (prf' : NatNotEqual n m) -> prf = prf'
+natNotEqualUniqueness SZ SZ = Refl
+natNotEqualUniqueness ZS ZS = Refl
+natNotEqualUniqueness (NotEqImpSNotEq prf) (NotEqImpSNotEq prf') = cong NotEqImpSNotEq $ natNotEqualUniqueness prf prf'
 
+nameDifferentUniqueness : (prf : NameDifferent name var) -> (prf' : NameDifferent name var) -> prf = prf'
+nameDifferentUniqueness (DiffName prf) (DiffName prf') = cong DiffName $ natNotEqualUniqueness prf prf'
+
+nameAvailabilityUniqueness : (prf : NameDoesNotExist name vars) -> (prf' : NameDoesNotExist name vars) -> prf = prf'
+nameAvailabilityUniqueness NoVars NoVars = Refl
+nameAvailabilityUniqueness (DeclDiff recursive_unique  new_unique)
+                           (DeclDiff recursive_unique' new_unique')
+                           with
+                           ( nameAvailabilityUniqueness recursive_unique recursive_unique'
+                           , nameDifferentUniqueness new_unique new_unique')
+  nameAvailabilityUniqueness (DeclDiff recursive_unique new_unique)
+                             (DeclDiff recursive_unique new_unique)
+                             | (Refl, Refl) = Refl
+
+-- Uniqueness of nonexistence proofs
+variableNonexistenceUnique : (prf : VariableDoesNotExist var vars) -> (prf' : VariableDoesNotExist var vars) -> prf = prf'
+variableNonexistenceUnique (NameAvailable prf) (NameAvailable prf') = cong NameAvailable $ nameAvailabilityUniqueness prf prf'
+
+public export
+DecEq Variables where
+  decEq [] [] = Yes Refl
+  decEq [] (var :: vars) = No $ \case Refl impossible
+  decEq (var :: vars) [] = No $ \case Refl impossible
+  decEq ((::) @{prf} var vars) ((::) @{prf'} var' vars') with (decEq var var', decEq vars vars')
+    decEq ((::) @{prf} var vars) ((::) @{prf'} var vars) | (Yes Refl, Yes Refl) with (variableNonexistenceUnique prf prf')
+      decEq((::) @{prf} var vars) ((::) @{prf} var vars) | (Yes Refl, Yes Refl) | Refl = Yes Refl
+    decEq (var :: vars) (var' :: vars') | (No contra, _) = No $ \case Refl => contra Refl
+    decEq (var :: vars) (var' :: vars') | (_, No contra) = No $ \case Refl => contra Refl
 
 -- Proof that there exists variable of certain type with certain name
 public export
@@ -100,17 +143,6 @@ data ExistsOfType : (name : Nat) -> (jty : JType) -> (vars : Variables) -> Type 
 
 -- Specialized version of List to keep track of initialized variables
 namespace Initialized
-  -- public export
-  -- data InitializedVariables : Type where
-  --   Nil : InitializedVariables
-  --   (::) : Nat -> InitializedVariables -> InitializedVariables
-
-  -- public export
-  -- data NameInitialized : Nat -> InitializedVariables -> Type where
-  --   Here : NameInitialized name (name::init)
-  --   There : NameInitialized name init ->
-  --           NameInitialized name (newName::init)
-
     public export
     data NameInitialized : Nat -> Variables -> Type where
       Here : (prf : VariableDoesNotExist (MkVar name jty Init) vars) =>
@@ -122,9 +154,10 @@ namespace Initialized
 namespace Initialize
     public export
     data Initialize : Nat -> Variables -> Variables -> Type where
-      Here : (prf : VariableDoesNotExist (MkVar name jty init) vars) =>
+      Here : (prf  : VariableDoesNotExist (MkVar name jty init) vars) =>
+             (prf' : VariableDoesNotExist (MkVar name jty Init) vars) =>
              Initialize name ((MkVar name jty init)::vars) ((MkVar name jty Init)::vars)
-      There : (prf : VariableDoesNotExist var oldVars) =>
+      There : (prf  : VariableDoesNotExist var oldVars) =>
               (prf' : VariableDoesNotExist var newVars) =>
               Initialize name oldVars newVars ->
               Initialize name (var :: oldVars) (var :: newVars)
@@ -138,12 +171,4 @@ public export
 getType : (vars : Variables) -> (k : Fin $ length vars) -> JType
 getType ((MkVar _ jty _) :: vars) FZ = jty
 getType (_ :: vars) (FS k) = getType vars k
-
-public export
-DecEq JType where
-  decEq JBool JBool = Yes Refl
-  decEq JBool JInt = No (\case Refl impossible)
-
-  decEq JInt JInt = Yes Refl
-  decEq JInt JBool = No (\case Refl impossible)
 

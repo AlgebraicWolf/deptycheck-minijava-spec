@@ -1,5 +1,8 @@
 module Spec.Aspects.Types
 
+import Decidable.Equality
+import Decidable.Decidable
+
 %default total
 
 public export
@@ -16,9 +19,12 @@ Show JType where
   show JInt = "int"
 
 public export
+DecEq JType where
+  decEq JBool JBool = Yes Refl
+  decEq JInt JInt = Yes Refl
+  decEq JBool JInt = No $ \case Refl impossible
+  decEq JInt JBool = No $ \case Refl impossible
+
+public export
 Eq JType where
-  JBool == JBool = True
-  JInt == JInt = True
-  x == y = False
-
-
+  x1 == x2 = isYes $ decEq x1 x2

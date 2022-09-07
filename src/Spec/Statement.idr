@@ -11,25 +11,40 @@ import public Spec.Expression
 -- generated programs by allowing the mixing of
 -- 'usual' statements and variable declarations
 
+-- This was put in a separater structure to try
+-- and break down the complexity of `Statement.Assignment` generation
 public export
-data Statement : (vars : Variables) -> (init : InitializedVariables) -> Type where
+data AssignmentExpressionWrap : (name : Nat) -> (vars : Variables) -> Type where
+  MkAssignmentExpressionWrap : (vars : Variables) ->
+                               (name : Nat) ->
+                               (jty : JType) ->
+                               (expr : Expression vars jty) ->
+                               ExistsOfType name jty vars ->
+                               AssignmentExpressionWrap name vars
+
+public export
+data Statement : (vars : Variables) -> Type where
   VarDeclaration : (type : JType) ->
                    (name : Nat) ->
-                   Statement vars init ->
-                   (prf : VariableDoesNotExist (MkVar name type) vars) =>
-                   Statement ((MkVar name type)::vars) init
+                   Statement vars ->
+                   (prf : VariableDoesNotExist (MkVar name type NotInit) vars) =>
+                   Statement ((MkVar name type NotInit)::vars)
 
   Assignment : (vars : Variables) ->
+               -- Variable to assign to and its type
                (name : Nat) ->
-               (jty : JType) ->
-               (expr : Expression vars init jty) ->
-               (stmt : Statement vars init) ->
-               ExistsOfType name jty vars =>
-               Statement vars (name::init)
+               -- Continuation
+               (stmt : Statement vars) ->
+               -- Assignment stuff
+               AssignmentExpressionWrap name vars ->
+               -- Mark variable as initialized
+               (newVars : Variables) ->
+               Initialize name vars newVars =>
+               Statement newVars
 
-  Print : Expression vars init jty ->
-          Statement vars init ->
-          Statement vars init
+  Print : Expression vars jty ->
+          Statement vars ->
+          Statement vars
 
-  Empty : Statement [] []
+  Empty : Statement []
 

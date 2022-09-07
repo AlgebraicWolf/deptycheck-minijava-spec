@@ -8,17 +8,18 @@ typeToCode : JType -> String
 typeToCode JBool = "boolean"
 typeToCode JInt = "int"
 
-exprToCode : {vars : Variables} -> Expression vars init res -> String
+exprToCode : {vars : Variables} -> Expression vars res -> String
 exprToCode BoolTrue = "true"
 exprToCode BoolFalse = "false"
 exprToCode (IntegerLiteral x) = show x
 exprToCode (FromIdentifier name) = "x" ++ show name
 
-stmtToCode : {vars : Variables} -> Statement vars init -> String
+stmtToCode : {vars : Variables} -> Statement vars -> String
 stmtToCode = (foldr ((++) . (++ "\n")) "") . reverse . stmtToCode' where
-  stmtToCode' : {v : Variables} -> Statement v init' -> List String
+  stmtToCode' : {v : Variables} -> Statement v -> List String
   stmtToCode' (VarDeclaration type name stmt) = (typeToCode type ++ " x" ++ show name ++ ";")::(stmtToCode' stmt)
-  stmtToCode' (Assignment vars' name _ expr stmt) = ("x" ++ show name ++ " = " ++ exprToCode expr ++ ";")::(stmtToCode' stmt)
+  stmtToCode' (Assignment _ name stmt (MkAssignmentExpressionWrap _ name jty expr x) _) = ("x" ++ show name ++ " = " ++ exprToCode expr ++ ";")::(stmtToCode' stmt)
+
   stmtToCode' (Print expr stmt) = ("System.out.println(" ++ exprToCode expr ++ ");")::(stmtToCode' stmt)
   stmtToCode' Empty = []
 
