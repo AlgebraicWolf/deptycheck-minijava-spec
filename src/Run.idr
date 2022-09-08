@@ -20,6 +20,7 @@ import Control.App.FileIO
 
 import Gens
 import Mapper
+import ShowInstances
 
 lazy_for : Monad m => LazyList a -> (a -> m Unit) -> m Unit
 lazy_for xs f = foldrLazy ((>>) . f) (pure ()) xs
@@ -201,6 +202,7 @@ writeTest dir tot n prog = do
   let path = dir ++ "/" ++ "test" ++ show n
   let test_path = path ++ ".java"
   let test_minijava_path = path ++ ".mjava"
+  let raw_term_path = path ++ ".term"
   let oracle_path = path ++ ".json"
   putStrLn $ "Saving test " ++ show (S n) ++ "/" ++ show tot
   withFile test_path WriteTruncate
@@ -209,6 +211,9 @@ writeTest dir tot n prog = do
   withFile test_minijava_path WriteTruncate
     throw
     (\f => fPutStr f $ programToMiniJavaCode prog)
+  withFile raw_term_path WriteTruncate
+    throw
+    (\f => fPutStr f $ show prog)
   withFile oracle_path WriteTruncate
     throw
     (\f => fPutStr f $ programToOracle prog)
