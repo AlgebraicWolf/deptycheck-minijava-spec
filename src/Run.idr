@@ -251,16 +251,26 @@ createDir = fileOp . createDir
 removeFile : Has [PrimIO, Exception IOError] es => String -> App es ()
 removeFile = fileOp . removeFile
 
+eachNth : Nat -> LazyList a -> LazyList a
+eachNth = eachNth' 0 where
+  eachNth' : Nat -> Nat -> LazyList a -> LazyList a
+  eachNth' k n [] = []
+  eachNth' 0 n (x :: xs) = x :: (eachNth' n n xs)
+  eachNth' (S k) n (x :: xs) = eachNth' k n xs
+
+
 generateTests : Has [PrimIO, Console, State AppConfig Config, FileIO] es => String -> Gen Program -> App es ()
 generateTests path gen = do
   conf <- get AppConfig
   -- TODO Handle case when the directory is already present
   createDir path
   writeMetadata path
-  lazy_for (iterateN conf.numTests S Z) $ \v => do
-    let (prog::_) = runOnce (v * conf.stride) gen
-      | [] => putStrLn "Generator is empty"
-    writeTest path conf.numTests v prog
+
+  let progs = eachNth conf.stride (runOnce Z gen)
+  let with_index = zip (iterateN conf.numTests S Z) progs
+  lazy_for with_index $ \(idx, prog) => do
+    writeTest path conf.numTests idx prog
+
 
 
 mainApp : Has [PrimIO, State AppConfig Config, FileIO, Exception GenericError, Console] es => List String -> App es ()
@@ -296,3 +306,4 @@ main = do
   case args' of
     [] => putStrLn "Argument list is empty for some bizzare reason"
     (_::args) => run $ mainAppNoexcept args
+
