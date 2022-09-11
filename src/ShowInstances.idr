@@ -1,6 +1,5 @@
 module ShowInstances
 
-import Generics.Derive
 import Spec.Class
 
 %language ElabReflection
