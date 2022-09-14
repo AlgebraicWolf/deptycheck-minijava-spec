@@ -25,8 +25,11 @@ import ShowInstances
 lazy_for : Monad m => LazyList a -> (a -> m Unit) -> m Unit
 lazy_for xs f = foldrLazy ((>>) . f) (pure ()) xs
 
-runOnce : (variant : Nat) -> Gen a -> LazyList a
-runOnce v gen = evalState (fst $ next someStdGen) (unGen $ variant v gen)
+-- runOnce : (variant : Nat) -> Gen a -> LazyList a
+-- runOnce v gen = evalState (fst $ next someStdGen) (unGen $ variant v gen)
+
+someValue : Nat -> Gen a -> Maybe a
+someValue n gen = head' $ unGenTryN 100000000 someStdGen $ variant n $ gen
 
 checkNat : Integer -> Maybe Nat
 checkNat n = toMaybe (n >= 0) (integerToNat n)
@@ -172,15 +175,15 @@ processOpts args = case parseOpts options args of
                         (Right x) => pure x
 
 
-printOnce : (n : Nat) -> Gen Program -> IO Unit
-printOnce n gen = lazy_for (iterateN n S Z) $ \v => do
-  print "\n==========\n"
-  let (x::_) = runOnce v gen
-    | [] => print "Generator is empty"
-  print $ programToCode x
-  where
-    print : String -> IO Unit
-    print str = putStrLn str >> fflush stdout
+-- printOnce : (n : Nat) -> Gen Program -> IO Unit
+-- printOnce n gen = lazy_for (iterateN n S Z) $ \v => do
+--   print "\n==========\n"
+--   let (x::_) = runOnce v gen
+--     | [] => print "Generator is empty"
+--   print $ programToCode x
+--   where
+--     print : String -> IO Unit
+--     print str = putStrLn str >> fflush stdout
 
 processArg : State AppConfig Config es => CLParam -> App es ()
 processArg Help = do conf <- get AppConfig
@@ -258,6 +261,7 @@ eachNth = eachNth' 0 where
   eachNth' 0 n (x :: xs) = x :: (eachNth' n n xs)
   eachNth' (S k) n (x :: xs) = eachNth' k n xs
 
+someValue' : Nat -> Gen a -> a
 
 generateTests : Has [PrimIO, Console, State AppConfig Config, FileIO] es => String -> Gen Program -> App es ()
 generateTests path gen = do
@@ -266,11 +270,11 @@ generateTests path gen = do
   createDir path
   writeMetadata path
 
-  let progs = eachNth conf.stride (runOnce Z gen)
-  let with_index = zip (iterateN conf.numTests S Z) progs
-  lazy_for with_index $ \(idx, prog) => do
-    writeTest path conf.numTests idx prog
-
+  lazy_for (iterateN conf.numTests S Z) $ \v => do
+    let maybeProg = someValue v gen
+    case maybeProg of
+      (Just prog) => writeTest path conf.numTests v prog
+      Nothing => putStrLn "Nothing generated"
 
 
 mainApp : Has [PrimIO, State AppConfig Config, FileIO, Exception GenericError, Console] es => List String -> App es ()

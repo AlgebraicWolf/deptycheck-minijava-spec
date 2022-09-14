@@ -123,7 +123,7 @@ genStatementAll' fl = genStatementAllGiven  @{genJType}
                                             fl
 
 genMainClass : Fuel -> Gen $ MainClass
-genMainClass fl = MkMain "MainClass" <$> (genStatementAll' fl [MkVar 1 JBool Init, MkVar 0 JBool Init])
+genMainClass fl = MkMain "MainClass" <$> genStatementAll' fl [MkVar 1 JBool Init, MkVar 0 JBool Init]
 
 export
 genProgram : Fuel -> Gen $ Program
