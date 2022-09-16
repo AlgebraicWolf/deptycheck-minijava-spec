@@ -271,7 +271,7 @@ generateTests path gen = do
   writeMetadata path
 
   lazy_for (iterateN conf.numTests S Z) $ \v => do
-    let maybeProg = someValue v gen
+    let maybeProg = someValue (conf.stride + v) gen
     case maybeProg of
       (Just prog) => writeTest path conf.numTests v prog
       Nothing => putStrLn "Nothing generated"
