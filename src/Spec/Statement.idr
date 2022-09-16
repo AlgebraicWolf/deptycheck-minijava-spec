@@ -42,6 +42,12 @@ data Statement : (vars : Variables) -> Type where
                Initialize name vars newVars =>
                Statement newVars
 
+  Block : Statement varsInside ->
+          (varsOutside : Variables) ->
+          Statement vars -> -- continuation
+          PrefixOf vars varsInside varsOutside =>
+          Statement varsOutside
+
   Print : Expression vars jty ->
           Statement vars ->
           Statement vars
