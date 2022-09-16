@@ -3,7 +3,7 @@ module Gens.Derived.GenExpression
 import Test.DepTyCheck.Gen
 import Test.DepTyCheck.Gen.Auto
 
-import public Spec.Class
+import public Spec.Expression
 
 %default total
 %language ElabReflection
