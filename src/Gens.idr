@@ -1,7 +1,6 @@
 module Gens
 
 import Data.Fin
-import Data.List.Lazier
 import Decidable.Equality.Core
 
 import Test.DepTyCheck.Gen
