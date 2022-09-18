@@ -1,4 +1,4 @@
-module Spec.Aspects.Types
+module Spec.Types
 
 import Decidable.Equality
 import Decidable.Decidable

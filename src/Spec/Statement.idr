@@ -4,6 +4,10 @@ import Data.Fin
 
 import public Spec.Expression
 
+import Spec.ExistsOfType
+import Spec.Initialize
+import Spec.PrefixOf
+
 %default total
 
 -- This is based on MiniJava grammar

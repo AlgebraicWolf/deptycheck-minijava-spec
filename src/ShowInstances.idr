@@ -2,6 +2,11 @@ module ShowInstances
 
 import Spec.Class
 
+import Spec.NameInitialized
+import Spec.ExistsOfType
+import Spec.Initialize
+import Spec.PrefixOf
+
 %language ElabReflection
 
 showVariableDoesNotExist : VariableDoesNotExist var vars -> String
@@ -49,8 +54,8 @@ Show Variables where
   show ((::) var vars @{nonExistencePrf}) = "(::) (" ++ show var ++ ") (" ++ show vars ++ ") @{" ++ show nonExistencePrf ++ "}"
 
 Show (ExistsOfType nm jty vars) where
-  show (THere @{prf}) = "THere @{" ++ show prf ++ "}"
-  show (TThere x @{nonExistencePrf}) = "TThere (" ++ show x ++ ") @{" ++ show nonExistencePrf ++ "}"
+  show (Here @{prf}) = "Here @{" ++ show prf ++ "}"
+  show (There x @{nonExistencePrf}) = "There (" ++ show x ++ ") @{" ++ show nonExistencePrf ++ "}"
 
 Show (AssignmentExpressionWrap nm vars) where
   show (MkAssignmentExpressionWrap vars nm jty expr prf) = "MkAssignmentExpressionWrap (" ++ show vars ++ ") " ++ show nm ++ " " ++ show @{debugJTyShow} jty ++ " (" ++ show @{debugExprShow} expr ++ ") (" ++ show prf ++ ")"

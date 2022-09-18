@@ -1,7 +1,8 @@
 module Spec.Expression
 
 import Data.Fin
-import public Spec.Aspects.Variables
+import public Spec.Variables
+import Spec.NameInitialized
 
 %default total
 
