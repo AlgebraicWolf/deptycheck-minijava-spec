@@ -63,6 +63,7 @@ Show (Statement vars) where
   show (VarDeclaration jty name cont @{nonExistencePrf}) = "VarDeclaration " ++ show @{debugJTyShow} jty ++ " " ++ show name ++ " (" ++ show cont ++ ") @{" ++ show nonExistencePrf ++ "}"
   show (Assignment vars1 name cont wrap vars @{initializeFunc}) = "Assignment (" ++ show vars1 ++ ") " ++ show name ++ " (" ++ show cont ++ ") (" ++ show wrap ++ ") (" ++ show vars ++ ") @{" ++ show initializeFunc ++ "}"
   show (Print expr cont) = "Print (" ++ show cont ++ ") (" ++ show @{debugExprShow} expr ++ ")"
+  show (Block inside newVars cont) = "Block (" ++ show inside ++ ") (" ++ show newVars ++ ") (" ++ show cont ++ ")"
   show Empty = "Empty"
 
 Show MainClass where
