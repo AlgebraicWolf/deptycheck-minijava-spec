@@ -31,6 +31,7 @@ genStatementAllGiven :
                (Fuel -> Gen (vars : Variables ** result : JType ** Expression vars result)) =>
                -- Generators for `VariableDoesNotExist`
                (Fuel -> (var : Variable) -> Gen (vars : Variables ** VariableDoesNotExist var vars)) =>
+               (Fuel -> (vars : Variables) -> Gen (var : Variable ** VariableDoesNotExist var vars)) =>
                (Fuel -> Gen (var : Variable ** vars : Variables ** VariableDoesNotExist var vars)) =>
                -- Generators for `Initialize`
                (Fuel -> Gen (name : Nat ** oldVars : Variables ** newVars : Variables ** Initialize name oldVars newVars)) =>
