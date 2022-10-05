@@ -3,7 +3,7 @@ module Gens.Derived.GenVariableDoesNotExist
 import Test.DepTyCheck.Gen
 import Test.DepTyCheck.Gen.Auto
 import Decidable.Equality
-import Spec.Aspects.Variables
+import Spec.Variables
 
 %default total
 %language ElabReflection
@@ -16,23 +16,27 @@ UsedConstructorDerivator = LeastEffort
 
 export
 genVariableDoesNotExistVar : Fuel ->
+                             (Fuel -> (nm : Nat) -> Gen (vars : Variables ** NameDoesNotExist nm vars)) =>
                              (var : Variable) ->
                              Gen (vars : Variables ** VariableDoesNotExist var vars)
 genVariableDoesNotExistVar = deriveGen
 
 export
 genVariableDoesNotExistVars : Fuel ->
+                              (Fuel -> (vars : Variables) -> Gen (nm : Nat ** NameDoesNotExist nm vars)) =>
                               (vars : Variables) ->
                               Gen (var : Variable ** VariableDoesNotExist var vars)
 genVariableDoesNotExistVars = deriveGen
 
 export
 genVariableDoesNotExist : Fuel ->
+                          (Fuel -> Gen (nm : Nat ** vars : Variables ** NameDoesNotExist nm vars)) =>
                           Gen (var : Variable ** vars : Variables ** VariableDoesNotExist var vars)
 genVariableDoesNotExist = deriveGen
 
 export
 genVariableDoesNotExistAll : Fuel ->
+                             (Fuel -> (nm : Nat) -> (vars : Variables) -> Gen $ NameDoesNotExist nm vars) =>
                              (var : Variable) ->
                              (vars : Variables) ->
                              Gen $ VariableDoesNotExist var vars

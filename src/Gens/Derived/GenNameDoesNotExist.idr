@@ -3,7 +3,7 @@ module Gens.Derived.GenNameDoesNotExist
 import Test.DepTyCheck.Gen
 import Test.DepTyCheck.Gen.Auto
 import Decidable.Equality
-import Spec.Aspects.Variables
+import Spec.Variables
 
 %default total
 %language ElabReflection
@@ -14,25 +14,26 @@ UsedConstructorDerivator = LeastEffort
 
 %logging "deptycheck.derive" 5
 
-export covering
-printDerived : DerivatorCore => Type -> Elab Unit
-printDerived ty = do
-  ty <- quote ty
-  logSugaredTerm "gen.auto.derive.infra" 0 "type" ty
-  logMsg "gen.auto.derive.infra" 0 "\n\{show !(deriveGenExpr ty)}"
+export
+genNameDoesNotExistVar : Fuel ->
+                         (nm : Nat) ->
+                         Gen (vars : Variables ** NameDoesNotExist nm vars)
+genNameDoesNotExistVar = deriveGen
 
+export
+genNameDoesNotExistVars : Fuel ->
+                         (vars : Variables) ->
+                         Gen (nm : Nat ** NameDoesNotExist nm vars)
+genNameDoesNotExistVars = deriveGen
+
+export
+genNameDoesNotExist : Fuel ->
+                      Gen (nm : Nat ** vars : Variables ** NameDoesNotExist nm vars)
+genNameDoesNotExist = deriveGen
+
+export
 genNameDoesNotExistAll : Fuel ->
                          (nm : Nat) ->
                          (vars : Variables) ->
                          Gen $ NameDoesNotExist nm vars
--- genNameDoesNotExistAll = deriveGen
-
-genNameDoesNotExistNm : Fuel ->
-                        -- Generators for primitive types
-                        (Fuel -> Gen JType) =>
-                        (Fuel -> Gen InitState) =>
-                        (Fuel -> Gen Nat) =>
-                        (Fuel -> (nm : Nat) -> (vars : Variables) -> Gen $ NameDoesNotExist nm vars) =>
-                        (nm : Nat) ->
-                        Gen (vars : Variables ** NameDoesNotExist nm vars)
-genNameDoesNotExistNm = deriveGen
+genNameDoesNotExistAll = deriveGen

@@ -1,9 +1,10 @@
-module Gens.Derived.GenStatementAllGiven
+module Gens.Derived.GenStatementWithBlock
 
 import Test.DepTyCheck.Gen
 import Test.DepTyCheck.Gen.Auto
 
 import public Spec.Statement
+import public Spec.HasBlock
 
 %default total
 %language ElabReflection
@@ -15,7 +16,7 @@ UsedConstructorDerivator = LeastEffort
 %logging "deptycheck.derive" 5
 
 export
-genStatementAllGiven :
+genStatementWithBlock :
                Fuel ->
                (Fuel -> Gen JType) =>
                (Fuel -> Gen Int) =>
@@ -37,9 +38,10 @@ genStatementAllGiven :
                (Fuel -> Gen (name : Nat ** oldVars : Variables ** newVars : Variables ** Initialize name oldVars newVars)) =>
                (Fuel -> (name : Nat) -> (oldVars : Variables) -> Gen (newVars : Variables ** Initialize name oldVars newVars)) =>
                (Fuel -> (oldVars : Variables) -> (newVars : Variables) -> Gen (name : Nat ** Initialize name oldVars newVars)) =>
-               -- (Fuel -> (name : Nat) -> (oldVars : Variables) -> (newVars : Variables) -> Gen $ Initialize name oldVars newVars) =>
+               (Fuel -> (name : Nat) -> (oldVars : Variables) -> (newVars : Variables) -> Gen $ Initialize name oldVars newVars) =>
                (Fuel -> (newVars : Variables) -> Gen (name : Nat ** oldVars : Variables ** Initialize name oldVars newVars)) =>
                (Fuel -> (oldVars : Variables) -> Gen (name : Nat ** newVars : Variables ** Initialize name oldVars newVars)) =>
+               (Fuel -> (vars : Variables) -> Gen $ Statement vars) =>
                (vars : Variables) ->
-               Gen $ Statement vars
-genStatementAllGiven = deriveGen
+               Gen $ StatementWithBlock vars
+genStatementWithBlock = deriveGen

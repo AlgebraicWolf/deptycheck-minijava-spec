@@ -3,7 +3,7 @@ module Gens.Derived.GenExistsOfType
 import Test.DepTyCheck.Gen
 import Test.DepTyCheck.Gen.Auto
 import Decidable.Equality
-import Spec.Aspects.Variables
+import Spec.ExistsOfType
 
 %default total
 %language ElabReflection
@@ -45,6 +45,7 @@ genExistsOfTypeAll = deriveGen
 
 export
 genExistsOfType : Fuel ->
+                  (Fuel -> Gen (nm : Nat ** vars : Variables ** NameDoesNotExist nm vars)) =>
                   (Fuel -> (var : Variable) -> Gen (vars : Variables ** VariableDoesNotExist var vars)) =>
                   (Fuel -> (vars : Variables) -> Gen (nm : Nat ** jty : JType ** ExistsOfType nm jty vars)) =>
                   Gen (nm : Nat ** jty : JType ** vars : Variables ** ExistsOfType nm jty vars)

@@ -3,7 +3,7 @@ module Gens.Derived.GenInitialize
 import Test.DepTyCheck.Gen
 import Test.DepTyCheck.Gen.Auto
 import Decidable.Equality
-import Spec.Aspects.Variables
+import Spec.Initialize
 
 %default total
 %language ElabReflection
