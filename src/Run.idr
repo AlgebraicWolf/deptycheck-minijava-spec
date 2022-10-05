@@ -28,8 +28,11 @@ lazy_for xs f = foldrLazy ((>>) . f) (pure ()) xs
 -- runOnce : (variant : Nat) -> Gen a -> LazyList a
 -- runOnce v gen = evalState (fst $ next someStdGen) (unGen $ variant v gen)
 
+genConfig : Config
+genConfig = MkConfig 1000
+
 someValue : Nat -> Gen a -> Maybe a
-someValue n gen = head' $ unGenTryN 100000000 someStdGen $ variant n $ gen
+someValue n gen = head' $ unGenTryN {config=genConfig} 1000 someStdGen $ variant n $ gen
 
 checkNat : Integer -> Maybe Nat
 checkNat n = toMaybe (n >= 0) (integerToNat n)
@@ -123,18 +126,18 @@ data Stride : Type where
 data NumFuel : Type where
 data HelpOnly : Type where
 
-data AppConfig : Type where
+data AppRunConfig : Type where
 
-record Config where
-  constructor MkConfig
+record RunConfig where
+  constructor MkRunConfig
   outDir : Maybe String
   numTests : Nat
   stride : Nat
   numFuel : Fuel
   helpOnly : Bool
 
-defaultConfig : Config
-defaultConfig = MkConfig Nothing
+defaultRunConfig : RunConfig
+defaultRunConfig = MkRunConfig Nothing
                          30
                          1
                          (limit 4)
@@ -185,17 +188,17 @@ processOpts args = case parseOpts options args of
 --     print : String -> IO Unit
 --     print str = putStrLn str >> fflush stdout
 
-processArg : State AppConfig Config es => CLParam -> App es ()
-processArg Help = do conf <- get AppConfig
-                     put AppConfig ({ helpOnly := True } conf)
-processArg (OutputDir str) = do conf <- get AppConfig
-                                put AppConfig ({ outDir := Just str} conf)
-processArg (NTests k) = do conf <- get AppConfig
-                           put AppConfig ({ numTests := k} conf)
-processArg (NSkip k) = do conf <- get AppConfig
-                          put AppConfig ({ stride := k} conf)
-processArg (NFuel k) = do conf <- get AppConfig
-                          put AppConfig ({ numFuel := limit k} conf)
+processArg : State AppRunConfig RunConfig es => CLParam -> App es ()
+processArg Help = do conf <- get AppRunConfig
+                     put AppRunConfig ({ helpOnly := True } conf)
+processArg (OutputDir str) = do conf <- get AppRunConfig
+                                put AppRunConfig ({ outDir := Just str} conf)
+processArg (NTests k) = do conf <- get AppRunConfig
+                           put AppRunConfig ({ numTests := k} conf)
+processArg (NSkip k) = do conf <- get AppRunConfig
+                          put AppRunConfig ({ stride := k} conf)
+processArg (NFuel k) = do conf <- get AppRunConfig
+                          put AppRunConfig ({ numFuel := limit k} conf)
 
 showHelp : Console es => App es ()
 showHelp = putStr $ textFromOptions options
@@ -224,12 +227,12 @@ writeTest dir tot n prog = do
 softInit : List a -> List a
 softInit xs = maybe [] id $ init' xs
 
-writeMetadata : Has [FileIO, State AppConfig Config] es => String -> App es ()
+writeMetadata : Has [FileIO, State AppRunConfig RunConfig] es => String -> App es ()
 writeMetadata dir = do
   let file_path = dir ++ "/settings.json"
   let empty_path = dir ++ "/empty"
 
-  conf <- get AppConfig
+  conf <- get AppRunConfig
 
   withFile file_path WriteTruncate throw $ \f => do
     fPutStrLn f $ "{"
@@ -263,9 +266,9 @@ eachNth = eachNth' 0 where
 
 someValue' : Nat -> Gen a -> a
 
-generateTests : Has [PrimIO, Console, State AppConfig Config, FileIO] es => String -> Gen Program -> App es ()
+generateTests : Has [PrimIO, Console, State AppRunConfig RunConfig, FileIO] es => String -> Gen Program -> App es ()
 generateTests path gen = do
-  conf <- get AppConfig
+  conf <- get AppRunConfig
   -- TODO Handle case when the directory is already present
   createDir path
   writeMetadata path
@@ -277,11 +280,11 @@ generateTests path gen = do
       Nothing => putStrLn "Nothing generated"
 
 
-mainApp : Has [PrimIO, State AppConfig Config, FileIO, Exception GenericError, Console] es => List String -> App es ()
+mainApp : Has [PrimIO, State AppRunConfig RunConfig, FileIO, Exception GenericError, Console] es => List String -> App es ()
 mainApp args = do
   arglist <- processOpts args
   for_ arglist processArg
-  conf <- get AppConfig
+  conf <- get AppRunConfig
   if conf.helpOnly
     then do
       showHelp
@@ -292,7 +295,7 @@ mainApp args = do
   pure ()
 
 mainAppInitVars : Has [PrimIO, FileIO, Exception GenericError, Console] es => List String -> App es ()
-mainAppInitVars args = new defaultConfig $ mainApp args
+mainAppInitVars args = new defaultRunConfig $ mainApp args
 
 mainAppNoexcept : Console es => Console (IOError :: es) => PrimIO (GenericError :: IOError :: es) => List String -> App es ()
 mainAppNoexcept args = let mainArgs = mainAppInitVars args in
