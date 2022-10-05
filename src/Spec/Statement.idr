@@ -4,9 +4,9 @@ import Data.Fin
 
 import public Spec.Expression
 
-import Spec.ExistsOfType
-import Spec.Initialize
-import Spec.PrefixOf
+import public Spec.ExistsOfType
+import public Spec.Initialize
+import public Spec.PrefixOf
 
 %default total
 

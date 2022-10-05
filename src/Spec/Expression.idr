@@ -2,7 +2,8 @@ module Spec.Expression
 
 import Data.Fin
 import public Spec.Variables
-import Spec.NameInitialized
+import public Spec.NameInitialized
+import public Spec.ExistsOfType
 
 %default total
 
