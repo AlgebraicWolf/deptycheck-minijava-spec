@@ -41,7 +41,7 @@ genStatementWithBlock :
                (Fuel -> (name : Nat) -> (oldVars : Variables) -> (newVars : Variables) -> Gen $ Initialize name oldVars newVars) =>
                (Fuel -> (newVars : Variables) -> Gen (name : Nat ** oldVars : Variables ** Initialize name oldVars newVars)) =>
                (Fuel -> (oldVars : Variables) -> Gen (name : Nat ** newVars : Variables ** Initialize name oldVars newVars)) =>
-               (Fuel -> (vars : Variables) -> Gen $ Statement vars) =>
+               (Fuel -> (preV : Variables) -> (postV : Variables) -> Gen $ Statement preV postV) =>
                (vars : Variables) ->
                Gen $ StatementWithBlock vars
-genStatementWithBlock = deriveGen
+-- genStatementWithBlock = deriveGen

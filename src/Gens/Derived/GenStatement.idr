@@ -36,5 +36,5 @@ genStatement : Fuel ->
                (Fuel -> (oldVars : Variables) -> (newVars : Variables) -> Gen (name : Nat ** Initialize name oldVars newVars)) =>
                (Fuel -> (name : Nat) -> (oldVars : Variables) -> (newVars : Variables) -> Gen $ Initialize name oldVars newVars) =>
                (Fuel -> (newVars : Variables) -> Gen (name : Nat ** oldVars : Variables ** Initialize name oldVars newVars)) =>
-               Gen $ (vars : Variables ** Statement vars )
+               Gen $ (preV : Variables ** postV : Variables ** Statement preV postV)
 -- genStatement = deriveGen

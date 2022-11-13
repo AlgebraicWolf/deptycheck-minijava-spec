@@ -14,21 +14,33 @@ exprToCode BoolFalse = "false"
 exprToCode (IntegerLiteral x) = show x
 exprToCode (FromIdentifier name) = "x" ++ show name
 
-stmtToCode : Statement vars -> String
-stmtToCode = (foldr ((++) . (++ "\n")) "") . reverse . stmtToCode' where
-  stmtToCode' : Statement v -> List String
-  stmtToCode' (VarDeclaration type name stmt) = (typeToCode type ++ " x" ++ show name ++ ";")::(stmtToCode' stmt)
-  stmtToCode' (Assignment _ name stmt (MkAssignmentExpressionWrap _ name jty expr x) _) = ("x" ++ show name ++ " = " ++ exprToCode expr ++ ";")::(stmtToCode' stmt)
+-- stmtToCode : Statement preV postV -> String
+-- stmtToCode = (foldr ((++) . (++ "\n")) "") . reverse . stmtToCode' where
+--   stmtToCode' : Statement v v' -> List String
+--   stmtToCode' (VarDeclaration type name stmt) = (typeToCode type ++ " x" ++ show name ++ ";")::(stmtToCode' stmt)
+--   stmtToCode' (Assignment _ name stmt (MkAssignmentExpressionWrap _ name jty expr x) _) = ("x" ++ show name ++ " = " ++ exprToCode expr ++ ";")::(stmtToCode' stmt)
 
-  stmtToCode' (Print expr stmt) = ("System.out.println(" ++ exprToCode expr ++ ");")::(stmtToCode' stmt)
-  stmtToCode' (Block inside _ stmt) = ("{\n" ++ stmtToCode inside ++ "}")::(stmtToCode' stmt)
-  stmtToCode' Empty = []
+--   stmtToCode' (Print expr stmt) = ("System.out.println(" ++ exprToCode expr ++ ");")::(stmtToCode' stmt)
+--   stmtToCode' (Block inside _ stmt) = ("{\n" ++ stmtToCode inside ++ "}")::(stmtToCode' stmt)
+--   stmtToCode' Empty = []
+
+stmtToCode : Stmt preV postV -> String
+stmtToCode (VarDeclaration type name) = typeToCode type ++ " x" ++ show name ++ ";"
+stmtToCode (Assignment name (MkAssignmentExpressionWrap _ _ _ expr _) postV) = "x" ++ show name ++ " = " ++ exprToCode expr ++ ";"
+stmtToCode (Print x) = "System.out.println(" ++ exprToCode x ++ ");"
+
+statementToCode : Statement preV postV -> String
+statementToCode = (foldr ((++) . (++ "\n")) "") . reverse . statementToCode' where
+  statementToCode' : Statement v v' -> List String
+  statementToCode' Empty = []
+  statementToCode' (InnerBlock cont inside v') = ("{\n" ++ statementToCode inside ++ "}") :: statementToCode' cont
+  statementToCode' (Stmt cont instr) = stmtToCode instr :: statementToCode' cont
 
 mainClassToCode : MainClass -> String
-mainClassToCode (MkMain name main) = "class " ++ show name ++ " {\npublic static void main(String[] args) {\n" ++ stmtToCode main ++ "}\n}\n"
+mainClassToCode (MkMain name main) = "class " ++ show name ++ " {\npublic static void main(String[] args) {\n" ++ statementToCode main ++ "}\n}\n"
 
 mainClassToMiniJavaCode : MainClass -> String
-mainClassToMiniJavaCode (MkMain name main) = "class " ++ show name ++ " {\npublic static void main() {\n" ++ stmtToCode main ++ "}\n}\n"
+mainClassToMiniJavaCode (MkMain name main) = "class " ++ show name ++ " {\npublic static void main() {\n" ++ statementToCode main ++ "}\n}\n"
 
 export
 programToCode : Program -> String

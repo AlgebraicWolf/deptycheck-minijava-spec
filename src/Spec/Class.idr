@@ -8,7 +8,7 @@ import public Spec.Statement
 public export
 data MainClass : Type where
   -- There are no global variables yet. Thus, statement should not expect any variables to be available
-  MkMain : {vars : Variables} -> (n : Identifier) -> (main : Statement vars) -> MainClass
+  MkMain : {vars : Variables} -> (n : Identifier) -> (main : Statement [] vars) -> MainClass
 
 -- For now, the wrapper is useless, but I left it for expansion purposes
 public export
