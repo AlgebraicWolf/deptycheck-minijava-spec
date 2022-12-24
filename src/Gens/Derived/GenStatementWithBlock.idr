@@ -1,7 +1,7 @@
 module Gens.Derived.GenStatementWithBlock
 
 import Test.DepTyCheck.Gen
-import Test.DepTyCheck.Gen.Auto
+import Deriving.DepTyCheck.Gen
 
 import public Spec.Statement
 import public Spec.HasBlock

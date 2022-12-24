@@ -9,7 +9,7 @@ import Data.Maybe
 import Data.Either
 import Data.Vect
 import Test.DepTyCheck.Gen
-import Test.DepTyCheck.Gen.Viz
+-- import Test.DepTyCheck.Gen.Viz
 import Control.Monad.State
 import Spec.Class
 import Spec.Expression
@@ -20,6 +20,7 @@ import Control.App
 import Control.App.Console
 import Control.App.FileIO
 import Data.Stream
+import System.Random.Pure.StdGen
 
 import Gens
 import Mapper
@@ -346,39 +347,48 @@ indexed_seeds = let seeds = toList $ splitN 10 someStdGen
 params : List (Nat, StdGen)
 params = indexed_seeds
 
+programLengthTopLevel : Program -> Nat
+programLengthTopLevel (MkProgram (MkMain _ main)) = statementLengthTopLevel main
+  where
+    statementLengthTopLevel : Statement fr to -> Nat
+    statementLengthTopLevel Empty = 0
+    statementLengthTopLevel (InnerBlock cont _ _) = S $ statementLengthTopLevel cont
+    statementLengthTopLevel (Stmt cont _) = S $ statementLengthTopLevel cont
+
 fl : Fuel
-fl = limit 50
+fl = limit 10
 
 some_gen : Gen String
 some_gen = do
   x <- oneOf [empty, pure 1, pure 2, empty]
   if x == 1 then empty else pure "2"
 
--- main : IO Unit
--- main = do
---   putStrLn "seed_id,cumulative_attempt"
---   lazy_for {m=IO} (genNWithAttemptNumber 10 someStdGen $ genProgram fl) $ \(seed_id, attempt, prog)  => do
---     -- let (n,prog) = someValueWithAttemptNumber seed $ genProgram fl
---     putStrLn $ show seed_id ++ "," ++ show attempt
--- -- withFile raw_term_path WriteTruncate
---   --   throw
---   --   (\f => fPutStr f $ show prog)
---     outFile <- openFile (show seed_id ++ "_" ++ show attempt ++ ".java") WriteTruncate
---     case outFile of
---          (Left err) => putStrLn $ "ERR " ++ show err
---          (Right f) => do
---            _ <- System.File.ReadWrite.fPutStr {io=IO} f $ programToCode prog
---            closeFile f
---     outFile2 <- openFile (show seed_id ++ "_" ++ show attempt ++ ".term") WriteTruncate
---     case outFile2 of
---          (Left err) => putStrLn $ "ERR " ++ show err
---          (Right f) => do
---            _ <- System.File.ReadWrite.fPutStr {io=IO} f $ show prog
---            closeFile f
+main : IO Unit
+main = do
+  putStrLn "seed_id,cumulative_attempt,length"
+  lazy_for {m=IO} (genNWithAttemptNumber 100 someStdGen $ genProgram fl) $ \(seed_id, attempt, prog)  => do
+    -- let (n,prog) = someValueWithAttemptNumber seed $ genProgram fl
+    putStrLn $ show seed_id ++ "," ++ show attempt ++ "," ++ show (programLengthTopLevel prog)
+-- withFile raw_term_path WriteTruncate
+  --   throw
+  --   (\f => fPutStr f $ show prog)
+    outFile <- openFile (show seed_id ++ "_" ++ show attempt ++ ".java") WriteTruncate
+    case outFile of
+         (Left err) => putStrLn $ "ERR " ++ show err
+         (Right f) => do
+           _ <- System.File.ReadWrite.fPutStr {io=IO} f $ programToCode prog
+           closeFile f
+    outFile2 <- openFile (show seed_id ++ "_" ++ show attempt ++ ".term") WriteTruncate
+    case outFile2 of
+         (Left err) => putStrLn $ "ERR " ++ show err
+         (Right f) => do
+           _ <- System.File.ReadWrite.fPutStr {io=IO} f $ show prog
+           closeFile f
 
-main : IO ()
-main = showLoop (genProgram fl) leaf
+-- main : IO ()
+-- main = showLoop (genProgram fl) leaf
 
+allNats : Stream Nat
 
 -- main : IO ()
 -- main = do

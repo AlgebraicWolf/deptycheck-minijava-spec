@@ -1,7 +1,7 @@
 module Gens.Derived.GenStatementAllGiven
 
 import Test.DepTyCheck.Gen
-import Test.DepTyCheck.Gen.Auto
+import Deriving.DepTyCheck.Gen
 
 import public Spec.Statement
 
@@ -17,6 +17,7 @@ UsedConstructorDerivator = LeastEffort
 export
 genStatementAllGiven :
                Fuel ->
+               (Fuel -> Gen Nat) =>
                (Fuel -> Gen JType) =>
                (Fuel -> Gen Int) =>
                -- Generators for `ExistsOfType`
@@ -33,6 +34,11 @@ genStatementAllGiven :
                (Fuel -> (var : Variable) -> Gen (vars : Variables ** VariableDoesNotExist var vars)) =>
                (Fuel -> (vars : Variables) -> Gen (var : Variable ** VariableDoesNotExist var vars)) =>
                (Fuel -> Gen (var : Variable ** vars : Variables ** VariableDoesNotExist var vars)) =>
+               -- Generators for `NameDoesNotExist`
+               (Fuel -> Gen (nm : Nat ** vars : Variables ** NameDoesNotExist nm vars)) =>
+               (Fuel -> (vars : Variables) -> Gen (nm : Nat ** NameDoesNotExist nm vars)) =>
+               (Fuel -> (nm : Nat) -> Gen (vars : Variables ** NameDoesNotExist nm vars)) =>
+               (Fuel -> (nm : Nat) -> (vars : Variables) -> Gen $ NameDoesNotExist nm vars) =>
                -- Generators for `Initialize`
                (Fuel -> Gen (name : Nat ** oldVars : Variables ** newVars : Variables ** Initialize name oldVars newVars)) =>
                (Fuel -> (name : Nat) -> (oldVars : Variables) -> Gen (newVars : Variables ** Initialize name oldVars newVars)) =>

@@ -50,12 +50,16 @@ DecEq Variable where
                                                        (_, No contra, _) => No $ \case Refl => contra Refl
                                                        (_, _, No contra) => No $ \case Refl => contra Refl
 
+-- public export
+-- data NatNotEqual : Nat -> Nat -> Type where
+--   SZ : NatNotEqual (S n) Z
+--   ZS : NatNotEqual Z (S n)
+--   NotEqImpSNotEq : NatNotEqual n m ->
+--                    NatNotEqual (S n) (S m)
+
 public export
 data NatNotEqual : Nat -> Nat -> Type where
-  SZ : NatNotEqual (S n) Z
-  ZS : NatNotEqual Z (S n)
-  NotEqImpSNotEq : NatNotEqual n m ->
-                   NatNotEqual (S n) (S m)
+  NotRefl : Not (x = y) -> NatNotEqual x y
 
 public export
 data NameDifferent : Nat -> Variable -> Type where
@@ -98,10 +102,17 @@ data VariableDoesNotExist : Variable -> Variables -> Type where
 
 %name Variables vars
 
+func_ext : (f : a -> b) -> (g : a -> b) -> ((x : a) -> f x = g x) -> f = g
+func_ext f g pointwise = believe_me $ Refl {x=Z}
+
+voidUnique : (x : Void) -> (y : Void) -> x = y
+voidUnique x y impossible
+
 natNotEqualUniqueness : (prf : NatNotEqual n m) -> (prf' : NatNotEqual n m) -> prf = prf'
-natNotEqualUniqueness SZ SZ = Refl
-natNotEqualUniqueness ZS ZS = Refl
-natNotEqualUniqueness (NotEqImpSNotEq prf) (NotEqImpSNotEq prf') = cong NotEqImpSNotEq $ natNotEqualUniqueness prf prf'
+-- natNotEqualUniqueness SZ SZ = Refl
+-- natNotEqualUniqueness ZS ZS = Refl
+-- natNotEqualUniqueness (NotEqImpSNotEq prf) (NotEqImpSNotEq prf') = cong NotEqImpSNotEq $ natNotEqualUniqueness prf prf'
+natNotEqualUniqueness (NotRefl f) (NotRefl g) = cong NotRefl $ func_ext f g (\x => voidUnique (f x) (g x))
 
 nameDifferentUniqueness : (prf : NameDifferent name var) -> (prf' : NameDifferent name var) -> prf = prf'
 nameDifferentUniqueness (DiffName prf) (DiffName prf') = cong DiffName $ natNotEqualUniqueness prf prf'

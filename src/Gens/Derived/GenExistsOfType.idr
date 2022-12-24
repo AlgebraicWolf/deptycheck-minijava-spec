@@ -1,7 +1,7 @@
 module Gens.Derived.GenExistsOfType
 
 import Test.DepTyCheck.Gen
-import Test.DepTyCheck.Gen.Auto
+import Deriving.DepTyCheck.Gen
 import Decidable.Equality
 import Spec.ExistsOfType
 
@@ -16,6 +16,7 @@ UsedConstructorDerivator = LeastEffort
 
 export
 genExistsOfTypeVars : Fuel ->
+                      (Fuel -> Gen Nat) =>
                       (vars : Variables) ->
                       Gen (nm : Nat ** jty : JType ** ExistsOfType nm jty vars)
 
@@ -23,6 +24,7 @@ genExistsOfTypeVars = deriveGen
 
 export
 genExistsOfTypeNameVars : Fuel ->
+                          (Fuel -> Gen Nat) =>
                           (nm : Nat) ->
                           (vars : Variables) ->
                           Gen (jty : JType ** ExistsOfType nm jty vars)
@@ -30,6 +32,7 @@ genExistsOfTypeNameVars = deriveGen
 
 export
 genExistsOfTypeJTyVars : Fuel ->
+                         (Fuel -> Gen Nat) =>
                          (jty : JType) ->
                          (vars : Variables) ->
                          Gen (nm : Nat ** ExistsOfType nm jty vars)
@@ -37,6 +40,7 @@ genExistsOfTypeJTyVars = deriveGen
 
 export
 genExistsOfTypeAll : Fuel ->
+                     (Fuel -> Gen Nat) =>
                      (nm : Nat) ->
                      (jty : JType) ->
                      (vars : Variables) ->
@@ -45,6 +49,7 @@ genExistsOfTypeAll = deriveGen
 
 export
 genExistsOfType : Fuel ->
+                  (Fuel -> Gen Nat) =>
                   (Fuel -> Gen (nm : Nat ** vars : Variables ** NameDoesNotExist nm vars)) =>
                   (Fuel -> (var : Variable) -> Gen (vars : Variables ** VariableDoesNotExist var vars)) =>
                   (Fuel -> (vars : Variables) -> Gen (nm : Nat ** jty : JType ** ExistsOfType nm jty vars)) =>

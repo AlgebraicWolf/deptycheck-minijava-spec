@@ -3,7 +3,7 @@ package real-thing-deptycheck-tested
 authors = "Aleksei Volkov"
 version = 0.0.1
 
-depends = contrib, deptycheck, elab-util
+depends = deptycheck, elab-util
 
 sourcedir = "src"
 

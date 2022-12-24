@@ -1,7 +1,7 @@
 module Gens.Derived.GenExpression
 
 import Test.DepTyCheck.Gen
-import Test.DepTyCheck.Gen.Auto
+import Deriving.DepTyCheck.Gen
 
 import public Spec.Expression
 
@@ -16,6 +16,7 @@ UsedConstructorDerivator = LeastEffort
 
 export
 genExpressionAll : Fuel ->
+                (Fuel -> Gen Nat) =>
                 (Fuel -> Gen Int) =>
                 (Fuel -> Gen JType) =>
                 (Fuel -> (name : Nat) -> (jty : JType) -> (vars : Variables) -> Gen $ ExistsOfType name jty vars) =>
@@ -27,6 +28,7 @@ genExpressionAll = deriveGen
 
 export
 genExpressionVars : Fuel ->
+                    (Fuel -> Gen Nat) =>
                     (Fuel -> Gen Int) =>
                     (Fuel -> Gen JType) =>
                     (vars : Variables) ->
@@ -35,6 +37,7 @@ genExpressionVars = deriveGen
 
 export
 genExpression : Fuel ->
+                (Fuel -> Gen Nat) =>
                 (Fuel -> Gen Int) =>
                 (Fuel -> Gen JType) =>
                 (Fuel -> (var : Variable) -> Gen (vars : Variables ** VariableDoesNotExist var vars)) =>

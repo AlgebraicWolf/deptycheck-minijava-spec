@@ -26,9 +26,7 @@ Show (NameInitialized name vars) where
   show (IntegerLiteral x) = "IntegerLiteral " ++ show x
 
 Show (NatNotEqual n m) where
-  show SZ = "SZ"
-  show ZS = "ZS"
-  show (NotEqImpSNotEq x) = "NotEqImpSNotEq (" ++ show x ++ ")"
+  show (NotRefl _) = "NotRefl"
 
 Show (NameDifferent nm var) where
   show (DiffName x) = "DiffName (" ++ show x ++ ")"
