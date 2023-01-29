@@ -328,68 +328,10 @@ mainAppNoexcept args = let mainArgs = mainAppInitVars args in
                                        (\err : IOError => putStrLn $ "Error: " ++ show err) in
                                        h2
 
--- main : IO Unit
--- main = do
---   args' <- getArgs
---   case args' of
---     [] => putStrLn "Argument list is empty for some bizzare reason"
---     (_::args) => run $ mainAppNoexcept args
-
-splitN : RandomGen g => (n : Nat) -> g -> Vect n g
-splitN 0 gen = []
-splitN (S k) gen = let (here, rest) = split gen in
-                       here :: (splitN k rest)
-
-indexed_seeds : List (Nat, StdGen)
-indexed_seeds = let seeds = toList $ splitN 10 someStdGen
-                    in zip [1..length seeds] seeds
-
-params : List (Nat, StdGen)
-params = indexed_seeds
-
-programLengthTopLevel : Program -> Nat
-programLengthTopLevel (MkProgram (MkMain _ main)) = statementLengthTopLevel main
-  where
-    statementLengthTopLevel : Statement fr to -> Nat
-    statementLengthTopLevel Empty = 0
-    statementLengthTopLevel (InnerBlock cont _ _) = S $ statementLengthTopLevel cont
-    statementLengthTopLevel (Stmt cont _) = S $ statementLengthTopLevel cont
-
-fl : Fuel
-fl = limit 10
-
-some_gen : Gen String
-some_gen = do
-  x <- oneOf [empty, pure 1, pure 2, empty]
-  if x == 1 then empty else pure "2"
-
 main : IO Unit
 main = do
-  putStrLn "seed_id,cumulative_attempt,length"
-  lazy_for {m=IO} (genNWithAttemptNumber 100 someStdGen $ genProgram fl) $ \(seed_id, attempt, prog)  => do
-    -- let (n,prog) = someValueWithAttemptNumber seed $ genProgram fl
-    putStrLn $ show seed_id ++ "," ++ show attempt ++ "," ++ show (programLengthTopLevel prog)
--- withFile raw_term_path WriteTruncate
-  --   throw
-  --   (\f => fPutStr f $ show prog)
-    outFile <- openFile (show seed_id ++ "_" ++ show attempt ++ ".java") WriteTruncate
-    case outFile of
-         (Left err) => putStrLn $ "ERR " ++ show err
-         (Right f) => do
-           _ <- System.File.ReadWrite.fPutStr {io=IO} f $ programToCode prog
-           closeFile f
-    outFile2 <- openFile (show seed_id ++ "_" ++ show attempt ++ ".term") WriteTruncate
-    case outFile2 of
-         (Left err) => putStrLn $ "ERR " ++ show err
-         (Right f) => do
-           _ <- System.File.ReadWrite.fPutStr {io=IO} f $ show prog
-           closeFile f
+  args' <- getArgs
+  case args' of
+    [] => putStrLn "Argument list is empty for some bizzare reason"
+    (_::args) => run $ mainAppNoexcept args
 
--- main : IO ()
--- main = showLoop (genProgram fl) leaf
-
-allNats : Stream Nat
-
--- main : IO ()
--- main = do
---   putStr $ showFull $ genProgram (limit 3)
