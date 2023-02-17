@@ -1,4 +1,4 @@
 [idris2]
 url = "https://github.com/buzden/Idris2"
 version = "0.6.0"
-commit = "latest:memo-lazy"
+commit = "0dee9738bf182d7edd0454c8331a282f971292df"
