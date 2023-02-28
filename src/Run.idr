@@ -29,6 +29,8 @@ import ShowInstances
 lazy_for : Monad m => LazyList a -> (a -> m Unit) -> m Unit
 lazy_for xs f = foldrLazy ((>>) . f) (pure ()) xs
 
+
+
 -- runOnce : (variant : Nat) -> Gen a -> LazyList a
 -- runOnce v gen = evalState (fst $ next someStdGen) (unGen $ variant v gen)
 
@@ -60,9 +62,6 @@ prependMaybe : Maybe a -> List a -> List a
 prependMaybe Nothing xs = xs
 prependMaybe (Just x) xs = x::xs
 
-
-
-
 toFileEx : FileError -> FileEx
 toFileEx (GenericFileError i) = GenericFileEx i
 toFileEx FileReadError = FileReadError
@@ -70,7 +69,6 @@ toFileEx FileWriteError = FileWriteError
 toFileEx FileNotFound = FileNotFound
 toFileEx PermissionDenied = PermissionDenied
 toFileEx FileExists = FileExists
-
 
 data GenericError = MkGenericError String
 
@@ -328,10 +326,63 @@ mainAppNoexcept args = let mainArgs = mainAppInitVars args in
                                        (\err : IOError => putStrLn $ "Error: " ++ show err) in
                                        h2
 
+-- main : IO Unit
+-- main = do
+--   args' <- getArgs
+--   case args' of
+--     [] => putStrLn "Argument list is empty for some bizzare reason"
+--     (_::args) => run $ mainAppNoexcept args
+
+deaccumulate : List Int -> List Int
+deaccumulate [] = []
+deaccumulate xs@(y::ys) = zipWith (-) xs (0 :: ys)
+
+programLengthTopLevel : Program -> Nat
+programLengthTopLevel (MkProgram (MkMain _ main)) = statementLengthTopLevel main
+  where
+    statementLengthTopLevel : Statement fr to -> Nat
+    statementLengthTopLevel Empty = 0
+    statementLengthTopLevel (InnerBlock cont _ _) = S $ statementLengthTopLevel cont
+    statementLengthTopLevel (Stmt cont _) = S $ statementLengthTopLevel cont
+
+fl : Fuel
+fl = limit 9
+
+subtractMiddle : (a, Integer, b) -> (a, Integer, b) -> (a, Integer, b)
+subtractMiddle (x, z, w) (y, v, s) = (x, z - v, w)
+
+lazy_deaccumulate : LazyList (a, Integer, b) -> LazyList (a, Integer, b)
+lazy_deaccumulate [] = []
+lazy_deaccumulate lz@((x, _, y)::xs) = zipWith subtractMiddle lz ((x, 0, y)::lz)
+
+lazy_deaccumulate' : LazyList (a, Nat, b) -> LazyList (a, Integer, b)
+lazy_deaccumulate' xs = let ys : LazyList (a, Integer, b)
+                            ys = map (\(x, y, z) => (x, cast y, z)) xs
+                            in lazy_deaccumulate ys
+
+a : Type -> Type
+a = LazyList
+
 main : IO Unit
 main = do
-  args' <- getArgs
-  case args' of
-    [] => putStrLn "Argument list is empty for some bizzare reason"
-    (_::args) => run $ mainAppNoexcept args
+  putStrLn "seed_id,attempt,length"
+  lazy_for {m=IO} (lazy_deaccumulate' $ genNWithAttemptNumber 100 someStdGen $ genProgram fl) $ \(seed_id, attempt, prog)  => do
+    -- let (n,prog) = someValueWithAttemptNumber seed $ genProgram fl
+    putStrLn $ show seed_id ++ "," ++ show attempt ++ "," ++ show (programLengthTopLevel prog)
+-- withFile raw_term_path WriteTruncate
+  --   throw
+  --   (\f => fPutStr f $ show prog)
+    outFile <- openFile (show seed_id ++ "_" ++ show attempt ++ ".java") WriteTruncate
+    case outFile of
+         (Left err) => putStrLn $ "ERR " ++ show err
+         (Right f) => do
+           _ <- System.File.ReadWrite.fPutStr {io=IO} f $ programToCode prog
+           closeFile f
+    -- outFile2 <- openFile (show seed_id ++ "_" ++ show attempt ++ ".term") WriteTruncate
+    -- case outFile2 of
+    --      (Left err) => putStrLn $ "ERR " ++ show err
+    --      (Right f) => do
+    --        _ <- System.File.ReadWrite.fPutStr {io=IO} f $ show prog
+    --        closeFile f
+
 
