@@ -102,6 +102,8 @@ data VariableDoesNotExist : Variable -> Variables -> Type where
 
 %name Variables vars
 
+
+
 func_ext : (f : a -> b) -> (g : a -> b) -> ((x : a) -> f x = g x) -> f = g
 func_ext f g pointwise = believe_me $ Refl {x=Z}
 
@@ -131,6 +133,10 @@ nameAvailabilityUniqueness (DeclDiff recursive_unique  new_unique)
 -- Uniqueness of nonexistence proofs
 variableNonexistenceUnique : (prf : VariableDoesNotExist var vars) -> (prf' : VariableDoesNotExist var vars) -> prf = prf'
 variableNonexistenceUnique (NameAvailable prf) (NameAvailable prf') = cong NameAvailable $ nameAvailabilityUniqueness prf prf'
+
+public export
+DecEq (NameDoesNotExist nm vars) where
+  decEq x y = Yes $ nameAvailabilityUniqueness x y
 
 public export
 DecEq Variables where
