@@ -14,7 +14,8 @@ prevNats 0 = []
 prevNats (S n) = [0..n]
 
 nextNats : Fuel -> Nat -> List Nat
-nextNats fl n = [S n .. S n + flToNat fl]
+-- nextNats fl n = [S n .. S n + flToNat fl]
+nextNats _ n = [S n .. 3]
 
 export
 genNatNotEqualAll : Fuel ->

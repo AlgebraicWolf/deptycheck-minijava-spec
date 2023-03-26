@@ -26,8 +26,8 @@ exprToCode (FromIdentifier name) = "x" ++ show name
 
 stmtToCode : Stmt preV postV -> String
 stmtToCode (VarDeclaration type name) = typeToCode type ++ " x" ++ show name ++ ";"
-stmtToCode (Assignment name (MkAssignmentExpressionWrap _ _ _ expr _) postV) = "x" ++ show name ++ " = " ++ exprToCode expr ++ ";"
 stmtToCode (Print x) = "System.out.println(" ++ exprToCode x ++ ");"
+stmtToCode (Assignment name preV postV jty expr) = "x" ++ show name ++ " = " ++ exprToCode expr ++ ";"
 
 statementToCode : Statement preV postV -> String
 statementToCode = (foldr ((++) . (++ "\n")) "") . reverse . statementToCode' where
