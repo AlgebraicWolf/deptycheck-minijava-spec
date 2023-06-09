@@ -7,7 +7,9 @@ import Data.List
 import Data.List.Lazy
 import Data.Maybe
 import Data.Either
+import Data.Vect
 import Test.DepTyCheck.Gen
+-- import Test.DepTyCheck.Gen.Viz
 import Control.Monad.State
 import Spec.Class
 import Spec.Expression
@@ -17,15 +19,41 @@ import System.Directory
 import Control.App
 import Control.App.Console
 import Control.App.FileIO
+import Data.Stream
+import System.Random.Pure.StdGen
 
 import Gens
 import Mapper
+import ShowInstances
 
 lazy_for : Monad m => LazyList a -> (a -> m Unit) -> m Unit
 lazy_for xs f = foldrLazy ((>>) . f) (pure ()) xs
 
-runOnce : (variant : Nat) -> Gen a -> LazyList a
-runOnce v gen = evalState (fst $ next someStdGen) (unGen $ variant v gen)
+
+
+-- runOnce : (variant : Nat) -> Gen a -> LazyList a
+-- runOnce v gen = evalState (fst $ next someStdGen) (unGen $ variant v gen)
+
+someValue : Nat -> Gen a -> Maybe a
+someValue n gen = head' $ unGenTryN 100000 someStdGen $ variant n $ gen
+
+filterMaybes : Stream (Maybe a) -> Stream a
+filterMaybes (Nothing :: xs) = filterMaybes xs
+filterMaybes ((Just x) :: xs) = x :: (filterMaybes xs)
+
+liftMaybe : (a, Maybe b) -> Maybe (a, b)
+liftMaybe (x, Nothing) = Nothing
+liftMaybe (x, (Just y)) = Just $ (x, y)
+
+takeLazy : Nat -> Stream a -> LazyList a
+takeLazy 0 _ = []
+takeLazy (S k) (x :: y) = x :: takeLazy k y
+
+genWithAttemptNumber : RandomGen g => (seed : g) -> Gen a -> Stream (Nat, a)
+genWithAttemptNumber seed gen = filterMaybes $ liftMaybe <$> zip nats (unGenTryAll seed gen)
+
+genNWithAttemptNumber : RandomGen g => (n : Nat) -> (seed : g) -> Gen a -> LazyList (Nat, Nat, a)
+genNWithAttemptNumber n seed gen = takeLazy n $ zip nats $ genWithAttemptNumber seed gen
 
 checkNat : Integer -> Maybe Nat
 checkNat n = toMaybe (n >= 0) (integerToNat n)
@@ -34,7 +62,6 @@ prependMaybe : Maybe a -> List a -> List a
 prependMaybe Nothing xs = xs
 prependMaybe (Just x) xs = x::xs
 
-
 toFileEx : FileError -> FileEx
 toFileEx (GenericFileError i) = GenericFileEx i
 toFileEx FileReadError = FileReadError
@@ -42,7 +69,6 @@ toFileEx FileWriteError = FileWriteError
 toFileEx FileNotFound = FileNotFound
 toFileEx PermissionDenied = PermissionDenied
 toFileEx FileExists = FileExists
-
 
 data GenericError = MkGenericError String
 
@@ -119,18 +145,18 @@ data Stride : Type where
 data NumFuel : Type where
 data HelpOnly : Type where
 
-data AppConfig : Type where
+data AppRunConfig : Type where
 
-record Config where
-  constructor MkConfig
+record RunConfig where
+  constructor MkRunConfig
   outDir : Maybe String
   numTests : Nat
   stride : Nat
   numFuel : Fuel
   helpOnly : Bool
 
-defaultConfig : Config
-defaultConfig = MkConfig Nothing
+defaultRunConfig : RunConfig
+defaultRunConfig = MkRunConfig Nothing
                          30
                          1
                          (limit 4)
@@ -171,27 +197,27 @@ processOpts args = case parseOpts options args of
                         (Right x) => pure x
 
 
-printOnce : (n : Nat) -> Gen Program -> IO Unit
-printOnce n gen = lazy_for (iterateN n S Z) $ \v => do
-  print "\n==========\n"
-  let (x::_) = runOnce v gen
-    | [] => print "Generator is empty"
-  print $ programToCode x
-  where
-    print : String -> IO Unit
-    print str = putStrLn str >> fflush stdout
+-- printOnce : (n : Nat) -> Gen Program -> IO Unit
+-- printOnce n gen = lazy_for (iterateN n S Z) $ \v => do
+--   print "\n==========\n"
+--   let (x::_) = runOnce v gen
+--     | [] => print "Generator is empty"
+--   print $ programToCode x
+--   where
+--     print : String -> IO Unit
+--     print str = putStrLn str >> fflush stdout
 
-processArg : State AppConfig Config es => CLParam -> App es ()
-processArg Help = do conf <- get AppConfig
-                     put AppConfig ({ helpOnly := True } conf)
-processArg (OutputDir str) = do conf <- get AppConfig
-                                put AppConfig ({ outDir := Just str} conf)
-processArg (NTests k) = do conf <- get AppConfig
-                           put AppConfig ({ numTests := k} conf)
-processArg (NSkip k) = do conf <- get AppConfig
-                          put AppConfig ({ stride := k} conf)
-processArg (NFuel k) = do conf <- get AppConfig
-                          put AppConfig ({ numFuel := limit k} conf)
+processArg : State AppRunConfig RunConfig es => CLParam -> App es ()
+processArg Help = do conf <- get AppRunConfig
+                     put AppRunConfig ({ helpOnly := True } conf)
+processArg (OutputDir str) = do conf <- get AppRunConfig
+                                put AppRunConfig ({ outDir := Just str} conf)
+processArg (NTests k) = do conf <- get AppRunConfig
+                           put AppRunConfig ({ numTests := k} conf)
+processArg (NSkip k) = do conf <- get AppRunConfig
+                          put AppRunConfig ({ stride := k} conf)
+processArg (NFuel k) = do conf <- get AppRunConfig
+                          put AppRunConfig ({ numFuel := limit k} conf)
 
 showHelp : Console es => App es ()
 showHelp = putStr $ textFromOptions options
@@ -201,6 +227,7 @@ writeTest dir tot n prog = do
   let path = dir ++ "/" ++ "test" ++ show n
   let test_path = path ++ ".java"
   let test_minijava_path = path ++ ".mjava"
+  let raw_term_path = path ++ ".term"
   let oracle_path = path ++ ".json"
   putStrLn $ "Saving test " ++ show (S n) ++ "/" ++ show tot
   withFile test_path WriteTruncate
@@ -209,6 +236,9 @@ writeTest dir tot n prog = do
   withFile test_minijava_path WriteTruncate
     throw
     (\f => fPutStr f $ programToMiniJavaCode prog)
+  -- withFile raw_term_path WriteTruncate
+  --   throw
+  --   (\f => fPutStr f $ show prog)
   withFile oracle_path WriteTruncate
     throw
     (\f => fPutStr f $ programToOracle prog)
@@ -216,12 +246,12 @@ writeTest dir tot n prog = do
 softInit : List a -> List a
 softInit xs = maybe [] id $ init' xs
 
-writeMetadata : Has [FileIO, State AppConfig Config] es => String -> App es ()
+writeMetadata : Has [FileIO, State AppRunConfig RunConfig] es => String -> App es ()
 writeMetadata dir = do
   let file_path = dir ++ "/settings.json"
   let empty_path = dir ++ "/empty"
 
-  conf <- get AppConfig
+  conf <- get AppRunConfig
 
   withFile file_path WriteTruncate throw $ \f => do
     fPutStrLn f $ "{"
@@ -246,23 +276,34 @@ createDir = fileOp . createDir
 removeFile : Has [PrimIO, Exception IOError] es => String -> App es ()
 removeFile = fileOp . removeFile
 
-generateTests : Has [PrimIO, Console, State AppConfig Config, FileIO] es => String -> Gen Program -> App es ()
+eachNth : Nat -> LazyList a -> LazyList a
+eachNth = eachNth' 0 where
+  eachNth' : Nat -> Nat -> LazyList a -> LazyList a
+  eachNth' k n [] = []
+  eachNth' 0 n (x :: xs) = x :: (eachNth' n n xs)
+  eachNth' (S k) n (x :: xs) = eachNth' k n xs
+
+someValue' : Nat -> Gen a -> a
+
+generateTests : Has [PrimIO, Console, State AppRunConfig RunConfig, FileIO] es => String -> Gen Program -> App es ()
 generateTests path gen = do
-  conf <- get AppConfig
+  conf <- get AppRunConfig
   -- TODO Handle case when the directory is already present
   createDir path
   writeMetadata path
+
   lazy_for (iterateN conf.numTests S Z) $ \v => do
-    let (prog::_) = runOnce (v * conf.stride) gen
-      | [] => putStrLn "Generator is empty"
-    writeTest path conf.numTests v prog
+    let maybeProg = someValue (conf.stride + v) gen
+    case maybeProg of
+      (Just prog) => writeTest path conf.numTests v prog
+      Nothing => putStrLn "Nothing generated"
 
 
-mainApp : Has [PrimIO, State AppConfig Config, FileIO, Exception GenericError, Console] es => List String -> App es ()
+mainApp : Has [PrimIO, State AppRunConfig RunConfig, FileIO, Exception GenericError, Console] es => List String -> App es ()
 mainApp args = do
   arglist <- processOpts args
   for_ arglist processArg
-  conf <- get AppConfig
+  conf <- get AppRunConfig
   if conf.helpOnly
     then do
       showHelp
@@ -273,7 +314,7 @@ mainApp args = do
   pure ()
 
 mainAppInitVars : Has [PrimIO, FileIO, Exception GenericError, Console] es => List String -> App es ()
-mainAppInitVars args = new defaultConfig $ mainApp args
+mainAppInitVars args = new defaultRunConfig $ mainApp args
 
 mainAppNoexcept : Console es => Console (IOError :: es) => PrimIO (GenericError :: IOError :: es) => List String -> App es ()
 mainAppNoexcept args = let mainArgs = mainAppInitVars args in
@@ -291,3 +332,57 @@ main = do
   case args' of
     [] => putStrLn "Argument list is empty for some bizzare reason"
     (_::args) => run $ mainAppNoexcept args
+
+deaccumulate : List Int -> List Int
+deaccumulate [] = []
+deaccumulate xs@(y::ys) = zipWith (-) xs (0 :: ys)
+
+programLengthTopLevel : Program -> Nat
+programLengthTopLevel (MkProgram (MkMain _ main)) = statementLengthTopLevel main
+  where
+    statementLengthTopLevel : Statement fr to -> Nat
+    statementLengthTopLevel Empty = 0
+    statementLengthTopLevel (InnerBlock cont _ _) = S $ statementLengthTopLevel cont
+    statementLengthTopLevel (Stmt cont _) = S $ statementLengthTopLevel cont
+
+fl : Fuel
+fl = limit 9
+
+subtractMiddle : (a, Integer, b) -> (a, Integer, b) -> (a, Integer, b)
+subtractMiddle (x, z, w) (y, v, s) = (x, z - v, w)
+
+lazy_deaccumulate : LazyList (a, Integer, b) -> LazyList (a, Integer, b)
+lazy_deaccumulate [] = []
+lazy_deaccumulate lz@((x, _, y)::xs) = zipWith subtractMiddle lz ((x, 0, y)::lz)
+
+lazy_deaccumulate' : LazyList (a, Nat, b) -> LazyList (a, Integer, b)
+lazy_deaccumulate' xs = let ys : LazyList (a, Integer, b)
+                            ys = map (\(x, y, z) => (x, cast y, z)) xs
+                            in lazy_deaccumulate ys
+
+a : Type -> Type
+a = LazyList
+
+-- main : IO Unit
+-- main = do
+--   putStrLn "seed_id,attempt,length"
+--   lazy_for {m=IO} (lazy_deaccumulate' $ genNWithAttemptNumber 100 someStdGen $ genProgram fl) $ \(seed_id, attempt, prog)  => do
+--     -- let (n,prog) = someValueWithAttemptNumber seed $ genProgram fl
+--     putStrLn $ show seed_id ++ "," ++ show attempt ++ "," ++ show (programLengthTopLevel prog)
+-- -- withFile raw_term_path WriteTruncate
+--   --   throw
+--   --   (\f => fPutStr f $ show prog)
+--     outFile <- openFile (show seed_id ++ "_" ++ show attempt ++ ".java") WriteTruncate
+--     case outFile of
+--          (Left err) => putStrLn $ "ERR " ++ show err
+--          (Right f) => do
+--            _ <- System.File.ReadWrite.fPutStr {io=IO} f $ programToCode prog
+--            closeFile f
+--     -- outFile2 <- openFile (show seed_id ++ "_" ++ show attempt ++ ".term") WriteTruncate
+--     -- case outFile2 of
+--     --      (Left err) => putStrLn $ "ERR " ++ show err
+--     --      (Right f) => do
+--     --        _ <- System.File.ReadWrite.fPutStr {io=IO} f $ show prog
+--     --        closeFile f
+
+

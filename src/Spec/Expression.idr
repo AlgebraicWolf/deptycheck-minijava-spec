@@ -1,24 +1,25 @@
 module Spec.Expression
 
 import Data.Fin
-import public Spec.Aspects.Variables
+import public Spec.Variables
+import public Spec.NameInitialized
+import public Spec.ExistsOfType
 
 %default total
 
 -- For now, this is based on the MiniJava grammar
 public export
-data Expression : (vars : Variables) -> (init : InitializedVariables) -> (result : JType) -> Type where
+data Expression : (vars : Variables) -> (result : JType) -> Type where
   FromIdentifier : (name : Nat) ->
-  ExistsOfType name jty vars =>
-  NameInitialized name init =>
-  Expression vars init jty
+                   NameInitialized name vars => -- initialization implies existence
+                   Expression vars jty
 
-  BoolTrue : Expression vars init JBool
-  BoolFalse : Expression vars init JBool
-  IntegerLiteral : Int -> Expression vars init JInt
+  BoolTrue : Expression vars JBool
+  BoolFalse : Expression vars JBool
+  IntegerLiteral : Int -> Expression vars JInt
 
 export
-Show (Expression vars init res) where
+Show (Expression vars res) where
   show BoolTrue = "true"
   show BoolFalse = "false"
   show (IntegerLiteral x) = show x

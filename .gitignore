@@ -1,2 +1,10 @@
-build
+build/*
+!build/ttc/
+
+build/ttc/*/*
+!build/ttc/*/Gens/
+
+build/ttc/*/Gens/*
+!build/ttc/**/Gens/Derived/
+
 harness/__pycache__
