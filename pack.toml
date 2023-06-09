@@ -6,7 +6,7 @@ commit = "5e9ae63d95d690c19c6aa7564939f9dec24872cb"
 [custom.all.deptycheck]
 type   = "git"
 url    = "https://gitlab.ispras.ru/vmver/deptycheck"
-commit = "e45b111f0a21cb6b6cc4d6fe1815249fae9a2f76"
+commit = "e3e7388ea40f532d63228b2fb9ad275f08855ffa"
 ipkg   = "deptycheck.ipkg"
 
 [custom.all.elab-util]
