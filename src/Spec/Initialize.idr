@@ -2,6 +2,8 @@ module Spec.Initialize
 
 import public Spec.Variables
 
+import Decidable.Equality
+
 %default total
 
 public export
@@ -13,3 +15,4 @@ data Initialize : Nat -> Variables -> Variables -> Type where
           (prf' : VariableDoesNotExist var newVars) =>
           Initialize name oldVars newVars ->
           Initialize name (var :: oldVars) (var :: newVars)
+

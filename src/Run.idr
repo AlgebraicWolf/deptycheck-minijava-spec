@@ -35,7 +35,7 @@ lazy_for xs f = foldrLazy ((>>) . f) (pure ()) xs
 -- runOnce v gen = evalState (fst $ next someStdGen) (unGen $ variant v gen)
 
 someValue : Nat -> Gen a -> Maybe a
-someValue n gen = head' $ unGenTryN 1000 someStdGen $ variant n $ gen
+someValue n gen = head' $ unGenTryN 100000 someStdGen $ variant n $ gen
 
 filterMaybes : Stream (Maybe a) -> Stream a
 filterMaybes (Nothing :: xs) = filterMaybes xs
@@ -326,12 +326,12 @@ mainAppNoexcept args = let mainArgs = mainAppInitVars args in
                                        (\err : IOError => putStrLn $ "Error: " ++ show err) in
                                        h2
 
--- main : IO Unit
--- main = do
---   args' <- getArgs
---   case args' of
---     [] => putStrLn "Argument list is empty for some bizzare reason"
---     (_::args) => run $ mainAppNoexcept args
+main : IO Unit
+main = do
+  args' <- getArgs
+  case args' of
+    [] => putStrLn "Argument list is empty for some bizzare reason"
+    (_::args) => run $ mainAppNoexcept args
 
 deaccumulate : List Int -> List Int
 deaccumulate [] = []
@@ -363,26 +363,26 @@ lazy_deaccumulate' xs = let ys : LazyList (a, Integer, b)
 a : Type -> Type
 a = LazyList
 
-main : IO Unit
-main = do
-  putStrLn "seed_id,attempt,length"
-  lazy_for {m=IO} (lazy_deaccumulate' $ genNWithAttemptNumber 100 someStdGen $ genProgram fl) $ \(seed_id, attempt, prog)  => do
-    -- let (n,prog) = someValueWithAttemptNumber seed $ genProgram fl
-    putStrLn $ show seed_id ++ "," ++ show attempt ++ "," ++ show (programLengthTopLevel prog)
--- withFile raw_term_path WriteTruncate
-  --   throw
-  --   (\f => fPutStr f $ show prog)
-    outFile <- openFile (show seed_id ++ "_" ++ show attempt ++ ".java") WriteTruncate
-    case outFile of
-         (Left err) => putStrLn $ "ERR " ++ show err
-         (Right f) => do
-           _ <- System.File.ReadWrite.fPutStr {io=IO} f $ programToCode prog
-           closeFile f
-    -- outFile2 <- openFile (show seed_id ++ "_" ++ show attempt ++ ".term") WriteTruncate
-    -- case outFile2 of
-    --      (Left err) => putStrLn $ "ERR " ++ show err
-    --      (Right f) => do
-    --        _ <- System.File.ReadWrite.fPutStr {io=IO} f $ show prog
-    --        closeFile f
+-- main : IO Unit
+-- main = do
+--   putStrLn "seed_id,attempt,length"
+--   lazy_for {m=IO} (lazy_deaccumulate' $ genNWithAttemptNumber 100 someStdGen $ genProgram fl) $ \(seed_id, attempt, prog)  => do
+--     -- let (n,prog) = someValueWithAttemptNumber seed $ genProgram fl
+--     putStrLn $ show seed_id ++ "," ++ show attempt ++ "," ++ show (programLengthTopLevel prog)
+-- -- withFile raw_term_path WriteTruncate
+--   --   throw
+--   --   (\f => fPutStr f $ show prog)
+--     outFile <- openFile (show seed_id ++ "_" ++ show attempt ++ ".java") WriteTruncate
+--     case outFile of
+--          (Left err) => putStrLn $ "ERR " ++ show err
+--          (Right f) => do
+--            _ <- System.File.ReadWrite.fPutStr {io=IO} f $ programToCode prog
+--            closeFile f
+--     -- outFile2 <- openFile (show seed_id ++ "_" ++ show attempt ++ ".term") WriteTruncate
+--     -- case outFile2 of
+--     --      (Left err) => putStrLn $ "ERR " ++ show err
+--     --      (Right f) => do
+--     --        _ <- System.File.ReadWrite.fPutStr {io=IO} f $ show prog
+--     --        closeFile f
 
 
