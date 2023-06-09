@@ -1,13 +1,12 @@
 [idris2]
 url = "https://github.com/buzden/Idris2"
 version = "0.6.0"
-commit = "791b0be61bd6e6ed5b738b4abcf1e317d9f8127d"
+commit = "5e9ae63d95d690c19c6aa7564939f9dec24872cb"
 
 [custom.all.deptycheck]
 type   = "git"
 url    = "https://github.com/buzden/deptycheck"
-# commit = "295625379540edb072d0ad94080fd55e41e75a7a"
-commit = "a2fe7507750a36cb2e9a6bcf1930a79e89895b8a"
+commit = "e45b111f0a21cb6b6cc4d6fe1815249fae9a2f76"
 ipkg   = "deptycheck.ipkg"
 
 [custom.all.elab-util]
