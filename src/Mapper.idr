@@ -24,20 +24,36 @@ exprToCode (FromIdentifier name) = "x" ++ show name
 --   stmtToCode' (Block inside _ stmt) = ("{\n" ++ stmtToCode inside ++ "}")::(stmtToCode' stmt)
 --   stmtToCode' Empty = []
 
-stmtToCode : Stmt preV postV -> String
+stmtToCode : {default "System.out.println" printF : String} -> Stmt preV postV -> String
 stmtToCode (VarDeclaration type name) = typeToCode type ++ " x" ++ show name ++ ";"
-stmtToCode (Print x) = "System.out.println(" ++ exprToCode x ++ ");"
+stmtToCode (Print x) = printF ++ "(" ++ exprToCode x ++ ");"
 stmtToCode (Assignment name preV postV jty expr) = "x" ++ show name ++ " = " ++ exprToCode expr ++ ";"
 
-statementToCode : Statement preV postV -> String
+
+statementToCode : {default "System.out.println" printF : String} -> Statement preV postV -> String
 statementToCode = (foldr ((++) . (++ "\n")) "") . reverse . statementToCode' where
   statementToCode' : Statement v v' -> List String
   statementToCode' Empty = []
   statementToCode' (InnerBlock cont inside v') = ("{\n" ++ statementToCode inside ++ "}") :: statementToCode' cont
-  statementToCode' (Stmt cont instr) = stmtToCode instr :: statementToCode' cont
+  statementToCode' (Stmt cont instr) = stmtToCode {printF=printF} instr :: statementToCode' cont
+
+javaPrintHelper : String
+javaPrintHelper = """
+                  static void println(int x) {
+                  System.out.println(x);
+                  }
+                  static void println(boolean x) {
+                  System.out.println(x ? 1 : 0);
+                  }
+                  """
+
+mjavaPrintHelper : String
+mjavaPrintHelper = """
+                   static void
+                   """
 
 mainClassToCode : MainClass -> String
-mainClassToCode (MkMain name main) = "class " ++ show name ++ " {\npublic static void main(String[] args) {\n" ++ statementToCode main ++ "}\n}\n"
+mainClassToCode (MkMain name main) = "class " ++ show name ++ " {\npublic static void main(String[] args) {\n" ++ statementToCode {printF="println"} main ++ "}\n" ++ javaPrintHelper ++ "}\n"
 
 mainClassToMiniJavaCode : MainClass -> String
 mainClassToMiniJavaCode (MkMain name main) = "class " ++ show name ++ " {\npublic static void main() {\n" ++ statementToCode main ++ "}\n}\n"
