@@ -5,7 +5,7 @@ commit = "5e9ae63d95d690c19c6aa7564939f9dec24872cb"
 
 [custom.all.deptycheck]
 type   = "git"
-url    = "https://github.com/buzden/deptycheck"
+url    = "https://gitlab.ispras.ru/vmver/deptycheck"
 commit = "e45b111f0a21cb6b6cc4d6fe1815249fae9a2f76"
 ipkg   = "deptycheck.ipkg"
 
