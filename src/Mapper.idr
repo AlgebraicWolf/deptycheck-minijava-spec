@@ -13,6 +13,7 @@ exprToCode BoolTrue = "true"
 exprToCode BoolFalse = "false"
 exprToCode (IntegerLiteral x) = show x
 exprToCode (FromIdentifier name) = "x" ++ show name
+exprToCode (BinaryOperation lhs rhs op) = "(\{exprToCode lhs}) \{show op} (\{exprToCode rhs})"
 
 -- stmtToCode : Statement preV postV -> String
 -- stmtToCode = (foldr ((++) . (++ "\n")) "") . reverse . stmtToCode' where
