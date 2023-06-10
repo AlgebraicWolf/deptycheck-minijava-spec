@@ -35,7 +35,7 @@ lazy_for xs f = foldrLazy ((>>) . f) (pure ()) xs
 -- runOnce v gen = evalState (fst $ next someStdGen) (unGen $ variant v gen)
 
 someValue : Nat -> Gen a -> Maybe a
-someValue n gen = head' $ unGenTryN 100000 someStdGen $ variant n $ gen
+someValue n gen = head' $ unGenTryN 10000000 someStdGen $ variant n $ gen
 
 filterMaybes : Stream (Maybe a) -> Stream a
 filterMaybes (Nothing :: xs) = filterMaybes xs

@@ -70,89 +70,89 @@ genNameDoesNotExistVars' : Fuel -> (vars : Variables) -> Gen (nm : Nat ** NameDo
 genNameDoesNotExistAll' : Fuel -> (nm : Nat) -> (vars : Variables) -> Gen $ NameDoesNotExist nm vars
 
 -- Definitions of auxillary generators
-genNameDoesNotExist' fl = genNameDoesNotExist @{genNat}
-                                              @{genNatNotEqualAll}
-                                              @{genNatNotEqual0}
-                                              @{genNatNotEqual1}
-                                              @{genNatNotEqual}
-                                              fl
-genNameDoesNotExistVar' fl = genNameDoesNotExistVar @{genNat}
-                                                    @{genNatNotEqualAll}
-                                                    @{genNatNotEqual0}
-                                                    @{genNatNotEqual1}
-                                                    @{genNatNotEqual}
-                                                    fl
+-- genNameDoesNotExist' fl = genNameDoesNotExist @{genNat}
+--                                               @{genNatNotEqualAll}
+--                                               @{genNatNotEqual0}
+--                                               @{genNatNotEqual1}
+--                                               @{genNatNotEqual}
+--                                               fl
+-- genNameDoesNotExistVar' fl = genNameDoesNotExistVar @{genNat}
+--                                                     @{genNatNotEqualAll}
+--                                                     @{genNatNotEqual0}
+--                                                     @{genNatNotEqual1}
+--                                                     @{genNatNotEqual}
+--                                                     fl
 
-genNameDoesNotExistVars' fl = genNameDoesNotExistVars @{genNat}
-                                                      @{genNatNotEqualAll}
-                                                      @{genNatNotEqual0}
-                                                      @{genNatNotEqual1}
-                                                      @{genNatNotEqual}
-                                                      fl
+-- genNameDoesNotExistVars' fl = genNameDoesNotExistVars @{genNat}
+--                                                       @{genNatNotEqualAll}
+--                                                       @{genNatNotEqual0}
+--                                                       @{genNatNotEqual1}
+--                                                       @{genNatNotEqual}
+--                                                       fl
 
-genNameDoesNotExistAll' fl = genNameDoesNotExistAll @{genNat}
-                                                    @{genNatNotEqualAll}
-                                                    @{genNatNotEqual0}
-                                                    @{genNatNotEqual1}
-                                                    @{genNatNotEqual}
-                                                    fl
+-- genNameDoesNotExistAll' fl = genNameDoesNotExistAll @{genNat}
+--                                                     @{genNatNotEqualAll}
+--                                                     @{genNatNotEqual0}
+--                                                     @{genNatNotEqual1}
+--                                                     @{genNatNotEqual}
+--                                                     fl
 
-genExistsOfType' fl = genExistsOfType @{genNat}
-                                      @{genNameDoesNotExist'}
-                                      @{genVariableDoesNotExistVar'}
-                                      @{\fl => genExistsOfTypeVars fl @{genNat}}
-                                      fl
-
-
-genExpressionAll' fl = genExpressionAll @{genNat}
-                                        @{genInt}
-                                        @{genJType}
-                                        @{\fl => genExistsOfTypeAll @{genNat} fl}
-                                        @{\fl => genExistsOfTypeJTyVars @{genNat} fl}
-                                        fl
-
-genExpressionVars' fl = genExpressionVars @{genNat}
-                                          @{genInt}
-                                          @{genJType}
-                                          fl
-
-genExpression' fl = genExpression @{genNat}
-                                  @{genInt}
-                                  @{genJType}
-                                  @{genVariableDoesNotExistVar'}
-                                  @{genVariableDoesNotExistVars'}
-                                  @{genVariableDoesNotExist'}
-                                  fl
+-- genExistsOfType' fl = genExistsOfType @{genNat}
+--                                       @{genNameDoesNotExist'}
+--                                       @{genVariableDoesNotExistVar'}
+--                                       @{\fl => genExistsOfTypeVars fl @{genNat}}
+--                                       fl
 
 
-genInitialize' fl = genInitialize @{genNat}
-                                  @{genVariableDoesNotExistVar'}
-                                  @{genVariableDoesNotExistAll'}
-                                  @{genVariableDoesNotExistVars'}
-                                  fl
+-- genExpressionAll' fl = genExpressionAll @{genNat}
+--                                         @{genInt}
+--                                         @{genJType}
+--                                         @{\fl => genExistsOfTypeAll @{genNat} fl}
+--                                         @{\fl => genExistsOfTypeJTyVars @{genNat} fl}
+--                                         fl
 
-genInitializeNameOld' fl = genInitializeNameOld @{genNat}
-                                                @{genVariableDoesNotExistAll'}
-                                                @{genVariableDoesNotExistVar'}
-                                                @{\fl => genInitializeAll fl @{genNat}}
-                                                fl
+-- genExpressionVars' fl = genExpressionVars @{genNat}
+--                                           @{genInt}
+--                                           @{genJType}
+--                                           fl
 
-genInitializeNew' fl = genInitializeNew @{genNat}
-                                        @{genVariableDoesNotExistAll'}
-                                        fl
+-- genExpression' fl = genExpression @{genNat}
+--                                   @{genInt}
+--                                   @{genJType}
+--                                   @{genVariableDoesNotExistVar'}
+--                                   @{genVariableDoesNotExistVars'}
+--                                   @{genVariableDoesNotExist'}
+--                                   fl
 
-genInitializeOld' fl = genInitializeOld @{genNat}
-                                        @{genVariableDoesNotExistAll'}
-                                        fl
 
-genVariableDoesNotExistVar' fl = genVariableDoesNotExistVar fl @{genNat}
-                                                               @{genNameDoesNotExistVar'}
+-- genInitialize' fl = genInitialize @{genNat}
+--                                   @{genVariableDoesNotExistVar'}
+--                                   @{genVariableDoesNotExistAll'}
+--                                   @{genVariableDoesNotExistVars'}
+--                                   fl
 
-genVariableDoesNotExistVars' fl = genVariableDoesNotExistVars fl @{genNat} @{genNameDoesNotExistVars'}
+-- genInitializeNameOld' fl = genInitializeNameOld @{genNat}
+--                                                 @{genVariableDoesNotExistAll'}
+--                                                 @{genVariableDoesNotExistVar'}
+--                                                 @{\fl => genInitializeAll fl @{genNat}}
+--                                                 fl
 
-genVariableDoesNotExist' fl = genVariableDoesNotExist fl @{genNat} @{genNameDoesNotExist'}
+-- genInitializeNew' fl = genInitializeNew @{genNat}
+--                                         @{genVariableDoesNotExistAll'}
+--                                         fl
 
-genVariableDoesNotExistAll' fl = genVariableDoesNotExistAll fl @{genNat} @{genNameDoesNotExistAll'}
+-- genInitializeOld' fl = genInitializeOld @{genNat}
+--                                         @{genVariableDoesNotExistAll'}
+--                                         fl
+
+-- genVariableDoesNotExistVar' fl = genVariableDoesNotExistVar fl @{genNat}
+--                                                                @{genNameDoesNotExistVar'}
+
+-- genVariableDoesNotExistVars' fl = genVariableDoesNotExistVars fl @{genNat} @{genNameDoesNotExistVars'}
+
+-- genVariableDoesNotExist' fl = genVariableDoesNotExist fl @{genNat} @{genNameDoesNotExist'}
+
+-- genVariableDoesNotExistAll' fl = genVariableDoesNotExistAll fl @{genNat} @{genNameDoesNotExistAll'}
 
 -- Statement generator
 genStatementAll' : Fuel -> (preV : Variables) -> (postV : Variables) -> Gen $ Statement preV postV
@@ -160,63 +160,13 @@ genStatementAll' fl = genStatementAllGiven  @{genNat}
                                             @{genJType}
                                             @{genInt}
 
-                                            @{\fl => genExistsOfTypeVars fl @{genNat}}
-                                            @{\fl => genExistsOfTypeNameVars fl @{genNat}}
-                                            @{\fl => genExistsOfTypeJTyVars fl @{genNat}}
-                                            @{\fl => genExistsOfTypeAll fl @{genNat}}
-                                            @{genExistsOfType'}
+                                            @{genNatNotEqualAll}
+                                            @{genNatNotEqual0}
+                                            @{genNatNotEqual1}
+                                            @{genNatNotEqual}
 
-                                            @{genExpressionAll'}
-                                            @{genExpressionVars'}
-                                            @{genExpression'}
-
-                                            @{genVariableDoesNotExistVar'}
-                                            @{genVariableDoesNotExistVars'}
-                                            @{genVariableDoesNotExist'}
-
-                                            @{genNameDoesNotExist'}
-                                            @{genNameDoesNotExistVars'}
-                                            @{genNameDoesNotExistVar'}
-                                            @{genNameDoesNotExistAll'}
-
-                                            @{genInitialize'}
-                                            @{genInitializeNameOld'}
-                                            @{\fl => genInitializeOldNew fl @{genNat}}
-                                            -- @{genInitializeAll}
-                                            @{genInitializeNew'}
-                                            @{genInitializeOld'}
                                             fl
 
--- genStatementWithBlock' : Fuel -> (vars : Variables) -> Gen $ StatementWithBlock vars
--- genStatementWithBlock' fl = genStatementWithBlock @{genJType}
---                                             @{genInt}
-
---                                             @{genExistsOfTypeVars}
---                                             @{genExistsOfTypeNameVars}
---                                             @{genExistsOfTypeJTyVars}
---                                             @{genExistsOfTypeAll}
---                                             @{genExistsOfType'}
-
---                                             @{genExpressionAll'}
---                                             @{genExpressionVars'}
---                                             @{genExpression'}
-
---                                             @{genVariableDoesNotExistVar'}
---                                             @{genVariableDoesNotExistVars'}
---                                             @{genVariableDoesNotExist'}
-
---                                             @{genInitialize'}
---                                             @{genInitializeNameOld'}
---                                             @{genInitializeOldNew}
---                                             @{genInitializeAll}
---                                             @{genInitializeNew'}
---                                             @{genInitializeOld'}
---                                             @{genStatementAll'}
---                                             fl
-
-
--- omitBlockProof : StatementWithBlock vars -> Statement vars
--- omitBlockProof (MkStatementWithBlock stmt _) = stmt
 
 vars' : Variables
 vars' = [MkVar 0 JBool Init]
