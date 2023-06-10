@@ -20,6 +20,10 @@ genStatementAllGiven :
                (Fuel -> Gen Nat) =>
                (Fuel -> Gen JType) =>
                (Fuel -> Gen Int) =>
+               (Fuel -> (n : Nat) -> (m : Nat) -> Gen $ NatNotEqual n m) =>
+               (Fuel -> (n : Nat) -> Gen (m : Nat ** NatNotEqual n m)) =>
+               (Fuel -> (m : Nat) -> Gen (n : Nat ** NatNotEqual n m)) =>
+               (Fuel -> Gen (n : Nat ** m : Nat ** NatNotEqual n m)) =>
                -- -- Generators for `ExistsOfType`
                -- (Fuel -> (vars : Variables) -> Gen (name : Nat ** jty : JType ** ExistsOfType name jty vars)) =>
                -- (Fuel -> (name : Nat) -> (vars : Variables) -> Gen (jty : JType ** ExistsOfType name jty vars)) =>

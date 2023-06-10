@@ -8,6 +8,7 @@ import public Spec.ExistsOfType
 %default total
 
 -- A binary operation arguments and resulting type
+public export
 data BinaryOp : JType -> JType -> JType -> Type where
   -- Boolean logic
   And : BinaryOp JBool JBool JBool
@@ -31,6 +32,7 @@ data BinaryOp : JType -> JType -> JType -> Type where
   NEQ : BinaryOp t t JBool
 
 -- An unary operation argument and resulting type
+public export
 data UnaryOp : JType -> JType -> Type where
   Not : UnaryOp JBool JBool
 
@@ -62,6 +64,7 @@ Show (BinaryOp lhs_ty rhs_ty res_ty) where
   show EQ = "=="
   show NEQ = "!="
 
+export
 Show (UnaryOp lhs_ty res_ty) where
   show Not = "!"
 
